@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verifica Truffe e Phishing Online - Allerte SMS e Controllo IBAN Sospetti</title>
-    <meta name="description" content="Il miglior verificatore phishing online gratuito in Italia. Verifica SMS, chat o screenshot sospetti, controlla IBAN e scopri le ultime truffe del momento.">
-    <meta name="keywords" content="come verificare se un SMS è una truffa, verificatore phishing online, controllo IBAN sospetto, truffa finto corriere, sms blocco conto, sicurezza digitale">
+    <title>Verifica Truffe e Phishing Online - Allerte SMS, Marketplace e Controllo IBAN</title>
+    <meta name="description" content="Il miglior verificatore anti-truffa gratuito in Italia. Verifica SMS, chat, screenshot e finti annunci di vendita online, controlla IBAN e scopri le ultime frodi." >
+    <meta name="keywords" content="come verificare se un SMS è una truffa, truffa marketplace, verificatore phishing online, controllo IBAN sospetto, finto venditore online, sicurezza digitale">
 
     <style>
         body {
@@ -30,6 +30,7 @@
         }
         h1 { font-size: 24px; color: #1a1a1a; margin-bottom: 10px; text-align: center; }
         h2 { font-size: 18px; color: #333; border-bottom: 2px solid #007bff; padding-bottom: 8px; margin-top: 0; }
+        h3.category-title { font-size: 15px; color: #555; margin: 20px 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px; }
         p.subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 25px; }
         textarea {
             width: 100%; height: 100px; padding: 12px; border: 1px solid #ccc;
@@ -48,20 +49,11 @@
         }
         button:hover { background-color: #0056b3; }
         
-        /* Stile per il caricamento (Spinner) */
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #007bff;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            animation: spin 1s linear infinite;
-            margin: 15px auto;
+            border: 4px solid #f3f3f3; border-top: 4px solid #007bff; border-radius: 50%;
+            width: 32px; height: 32px; animation: spin 1s linear infinite; margin: 15px auto;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         #risultato {
             margin-top: 25px; padding: 15px; border-radius: 8px; background: #f9f9f9;
@@ -71,7 +63,7 @@
             background: #fff8f8;
             border-left: 4px solid #dc3545;
             padding: 12px 15px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             border-radius: 0 8px 8px 0;
             font-size: 14px;
         }
@@ -87,12 +79,12 @@
     <!-- STRUMENTO DI VERIFICA -->
     <div class="container">
         <h1>Assistente Anti-Truffa</h1>
-        <p class="subtitle">Incolla un testo o carica uno screenshot di un messaggio sospetto per l'analisi immediata.</p>
+        <p class="subtitle">Incolla un testo, una chat o carica uno screenshot per analizzare subito qualsiasi rischio di frode.</p>
         
-        <textarea id="testoMessaggio" placeholder="Scrivi o incolla qui il messaggio (es. SMS banca, corriere)..."></textarea>
+        <textarea id="testoMessaggio" placeholder="Incolla il testo del messaggio, l'annuncio o la chat con il venditore..."></textarea>
         
         <div class="file-upload">
-            <label for="imageInput">📸 Oppure carica uno screenshot:</label>
+            <label for="imageInput">📸 Oppure carica uno screenshot (chat o SMS):</label>
             <input type="file" id="imageInput" accept="image/*">
         </div>
 
@@ -104,27 +96,36 @@
     <!-- BACHECA DELLE TRUFFE DEL MOMENTO -->
     <div class="container">
         <h2>🚨 Truffe del Momento in Italia</h2>
-        <p class="subtitle">Le allerte più segnalate dai cittadini per riconoscere subito i tentativi di frode.</p>
+        <p class="subtitle">Le allerte più segnalate per riconoscere phishing e raggiri commerciali.</p>
+
+        <h3 class="category-title">📱 Phishing & Messaggi Ingannevoli</h3>
 
         <div class="alert-card">
-            <h4>📦 La Truffa del Finto Corriere (SMS)</h4>
-            <p>Ricevi un messaggio che dice *"Il tuo pacco è in giacenza, clicca sul link per aggiornare l'indirizzo"*. Spesso chiedono un piccolo pagamento di 1-2 euro: è phishing per rubare i dati della tua carta di credito.</p>
+            <h4>📦 La Truffa del Finto Corriere</h4>
+            <p>SMS che annunciano *"Pacco in giacenza, clicca sul link per aggiornare l'indirizzo"*, chiedendo un piccolo micro-pagamento con carta per sbloccarlo. È un furto di dati.</p>
         </div>
 
         <div class="alert-card">
             <h4>🏦 Il Blocco del Conto Bancario o Postale</h4>
-            <p>Un SMS allarmante ti avvisa che *"Il tuo conto è stato sospeso per motivi di sicurezza"*. Ti invitano a cliccare su un link contraffatto per effettuare l'accesso: non farlo mai, le banche non chiedono credenziali via SMS.</p>
+            <p>Finti allarmi sulla sicurezza del conto che invitano a cliccare su link contraffatti per inserire le credenziali di accesso. Le banche non lo chiedono mai via SMS.</p>
+        </div>
+
+        <h3 class="category-title">🛒 Finti Annunci & Marketplace</h3>
+
+        <div class="alert-card">
+            <h4>🏷️ Il Finto Venditore su Marketplace / Social</h4>
+            <p>Oggetti in vendita a prezzi molto vantaggiosi. Il venditore insiste per spostare la chat fuori dalla piattaforma ufficiale o chiede pagamenti immediati con metodi non tracciabili (ricariche Postepay, bonifici istantanei a terzi o criptovalute).</p>
         </div>
 
         <div class="alert-card">
-            <h4>💶 Finti Rimborsi e Bonus Fiscali</h4>
-            <p>Comunicazioni fraudolente che promettono rimborsi da parte dell'Agenzia delle Entrate o dell'INPS. Sfruttano la fretta e la speranza di ricevere denaro per spingerti a inserire le tue coordinate bancarie.</p>
+            <h4>🛍️ Siti E-commerce Civetta</h4>
+            <p>Negozio online sconosciuto con sconti incredibili (es. 70% su grandi marchi). I prodotti non arrivano mai e i dati della carta di credito vengono compromessi.</p>
         </div>
     </div>
 
     <div class="container seo-section">
-        <h3>Come difendersi online</h3>
-        <p>Il nostro <strong>verificatore phishing online</strong> ti aiuta a smascherare frodi e a effettuare un rapido <strong>controllo IBAN sospetto</strong> in totale sicurezza.</p>
+        <h3>Protezione digitale a 360 gradi</h3>
+        <p>Usa il nostro <strong>verificatore phishing online</strong> e analizzatore di chat per bloccare tentativi di frode, verificare IBAN sospetti e comprare in sicurezza.</p>
     </div>
 
     <script>
@@ -138,7 +139,6 @@
                 return;
             }
 
-            // Mostra l'animazione di caricamento (Spinner)
             divRisultato.style.display = 'block';
             divRisultato.innerHTML = `
                 <div style="text-align: center;">
