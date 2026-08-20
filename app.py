@@ -31,7 +31,7 @@ def analizza_con_ia(testo="", image_base64=None):
     user_content = []
     text_prompt = "Analizza questo contenuto per individuare eventuali truffe o tentativi di phishing:"
     
-    if testo and testo.strip():
+    if testo and str(testo).strip():
         testo_pulito = maschera_dati_sensibili(testo)
         text_prompt += f"\nTesto: {testo_pulito}"
         
@@ -63,7 +63,7 @@ def analizza():
         testo = dati.get('testo', '') or ''
         image_base64 = dati.get('image', None)
         
-        if not.strip(testo) and not image_base64:
+        if not str(testo).strip() and not image_base64:
             return jsonify({'errore': 'Inserisci un messaggio o carica uno screenshot.'}), 400
 
         risultato = analizza_con_ia(testo=testo, image_base64=image_base64)
