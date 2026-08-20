@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verifica Truffe e Phishing Online - Controlla SMS, Screenshot e IBAN Sospetti</title>
-    <meta name="description" content="Il miglior verificatore phishing online gratuito in Italia. Verifica SMS, chat o screenshot sospetti ed effettua un controllo IBAN in un click.">
-    <meta name="keywords" content="come verificare se un SMS è una truffa, verificatore phishing online, controllo IBAN sospetto, sicurezza digitale, anti truffa">
+    <title>Verifica Truffe e Phishing Online - Allerte SMS e Controllo IBAN Sospetti</title>
+    <meta name="description" content="Il miglior verificatore phishing online gratuito in Italia. Verifica SMS, chat o screenshot sospetti, controlla IBAN e scopri le ultime truffe del momento.">
+    <meta name="keywords" content="come verificare se un SMS è una truffa, verificatore phishing online, controllo IBAN sospetto, truffa finto corriere, sms blocco conto, sicurezza digitale">
 
     <style>
         body {
@@ -20,7 +20,7 @@
             min-height: 100vh;
         }
         .container {
-            max-width: 600px;
+            max-width: 650px;
             width: 100%;
             background: #ffffff;
             padding: 30px;
@@ -29,16 +29,17 @@
             margin-top: 20px;
         }
         h1 { font-size: 24px; color: #1a1a1a; margin-bottom: 10px; text-align: center; }
+        h2 { font-size: 18px; color: #333; border-bottom: 2px solid #007bff; padding-bottom: 8px; margin-top: 0; }
         p.subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 25px; }
         textarea {
             width: 100%; height: 100px; padding: 12px; border: 1px solid #ccc;
             border-radius: 8px; font-size: 15px; resize: vertical; box-sizing: border-box; margin-bottom: 15px;
         }
         .file-upload {
-            margin-bottom: 15px; font-size: 14px; color: #55f; text-align: left;
+            margin-bottom: 15px; font-size: 14px; color: #007bff; text-align: left;
         }
         input[type="file"] {
-            display: block; margin-top: 5px; font-size: 14px;
+            display: block; margin-top: 5px; font-size: 14px; color: #333;
         }
         button {
             width: 100%; background-color: #007bff; color: white; border: none;
@@ -49,18 +50,29 @@
             margin-top: 25px; padding: 15px; border-radius: 8px; background: #f9f9f9;
             border: 1px solid #e0e0e0; display: none; white-space: pre-line; font-size: 15px; line-height: 1.5;
         }
+        .alert-card {
+            background: #fff8f8;
+            border-left: 4px solid #dc3545;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border-radius: 0 8px 8px 0;
+            font-size: 14px;
+        }
+        .alert-card h4 { margin: 0 0 5px 0; color: #dc3545; font-size: 15px; }
+        .alert-card p { margin: 0; color: #555; line-height: 1.4; }
         .seo-section {
-            margin-top: 40px; font-size: 13px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 20px;
+            margin-top: 30px; font-size: 13px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 20px;
         }
     </style>
 </head>
 <body>
 
+    <!-- STRUMENTO DI VERIFICA -->
     <div class="container">
         <h1>Assistente Anti-Truffa</h1>
-        <p class="subtitle">Incolla un testo o carica uno screenshot di un messaggio sospetto.</p>
+        <p class="subtitle">Incolla un testo o carica uno screenshot di un messaggio sospetto per l'analisi immediata.</p>
         
-        <textarea id="testoMessaggio" placeholder="Scrivi o incolla qui il messaggio..."></textarea>
+        <textarea id="testoMessaggio" placeholder="Scrivi o incolla qui il messaggio (es. SMS banca, corriere)..."></textarea>
         
         <div class="file-upload">
             <label for="imageInput">📸 Oppure carica uno screenshot:</label>
@@ -72,14 +84,36 @@
         <div id="risultato"></div>
     </div>
 
+    <!-- BACHECA DELLE TRUFFE DEL MOMENTO (SEO & TRAFFICO) -->
+    <div class="container">
+        <h2>🚨 Truffe del Momento in Italia</h2>
+        <p class="subtitle">Le allerte più segnalate dai cittadini per riconoscere subito i tentativi di frode.</p>
+
+        <div class="alert-card">
+            <h4>📦 La Truffa del Finto Corriere (SMS)</h4>
+            <p>Ricevi un messaggio che dice *"Il tuo pacco è in giacenza, clicca sul link per aggiornare l'indirizzo"*. Spesso chiedono un piccolo pagamento di 1-2 euro: è phishing per rubare i dati della tua carta di credito.</p>
+        </div>
+
+        <div class="alert-card">
+            <h4>🏦 Il Blocco del Conto Bancario o Postale</h4>
+            <p>Un SMS allarmante ti avvisa che *"Il tuo conto è stato sospeso per motivi di sicurezza"*. Ti invitano a cliccare su un link contraffatto per effettuare l'accesso: non farlo mai, le banche non chiedono credenziali via SMS.</p>
+        </div>
+
+        <div class="alert-card">
+            <h4>💶 Finti Rimborsi e Bonus Fiscali</h4>
+            <p>Comunicazioni fraudolente che promettono rimborsi da parte dell'Agenzia delle Entrate o dell'INPS. Sfruttano la fretta e la speranza di ricevere denaro per spingerti a inserire le tue coordinate bancarie.</p>
+        </div>
+    </div>
+
+    <!-- SEZIONE INFO -->
     <div class="container seo-section">
-        <h3>Proteggiti dalle truffe digitali in Italia</h3>
-        <p>Hai ricevuto un messaggio anomalo? Il nostro <strong>verificatore phishing online</strong> ti permette di analizzare testi o caricare screenshot per smascherare tentativi di frode in pochi secondi.</p>
+        <h3>Come difendersi online</h3>
+        <p>Il nostro <strong>verificatore phishing online</strong> ti aiuta a smascherare frodi e a effettuare un rapido <strong>controllo IBAN sospetto</strong> in totale sicurezza.</p>
     </div>
 
     <script>
         async function analizzaMessaggio() {
-            const testo = document.getElementById('testoMessaggio').value;
+            const testo = document.getElementById('testoMessaggio'].value;
             const imageInput = document.getElementById('imageInput').files[0];
             const divRisultato = document.getElementById('risultato');
             
