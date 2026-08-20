@@ -3,13 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- TAG SEO E PAROLE CHIAVE PER GOOGLE -->
-    <title>Verifica Truffe e Phishing Online - Controlla SMS e IBAN Sospetti</title>
-    <meta name="description" content="Il miglior verificatore phishing online gratuito in Italia. Scopri come verificare se un SMS è una truffa ed effettua un controllo IBAN sospetto in un click.">
+    <title>Verifica Truffe e Phishing Online - Controlla SMS, Screenshot e IBAN Sospetti</title>
+    <meta name="description" content="Il miglior verificatore phishing online gratuito in Italia. Verifica SMS, chat o screenshot sospetti ed effettua un controllo IBAN in un click.">
     <meta name="keywords" content="come verificare se un SMS è una truffa, verificatore phishing online, controllo IBAN sospetto, sicurezza digitale, anti truffa">
 
-    <!-- Stili grafici leggeri e moderni -->
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -31,66 +28,29 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             margin-top: 20px;
         }
-        h1 {
-            font-size: 24px;
-            color: #1a1a1a;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-        p.subtitle {
-            text-align: center;
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 25px;
-        }
+        h1 { font-size: 24px; color: #1a1a1a; margin-bottom: 10px; text-align: center; }
+        p.subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 25px; }
         textarea {
-            width: 100%;
-            height: 120px;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 15px;
-            resize: vertical;
-            box-sizing: border-box;
-            margin-bottom: 15px;
+            width: 100%; height: 100px; padding: 12px; border: 1px solid #ccc;
+            border-radius: 8px; font-size: 15px; resize: vertical; box-sizing: border-box; margin-bottom: 15px;
         }
-        textarea:focus {
-            border-color: #007bff;
-            outline: none;
+        .file-upload {
+            margin-bottom: 15px; font-size: 14px; color: #55f; text-align: left;
+        }
+        input[type="file"] {
+            display: block; margin-top: 5px; font-size: 14px;
         }
         button {
-            width: 100%;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 12px;
-            font-size: 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s;
+            width: 100%; background-color: #007bff; color: white; border: none;
+            padding: 12px; font-size: 16px; border-radius: 8px; cursor: pointer; font-weight: bold;
         }
-        button:hover {
-            background-color: #0056b3;
-        }
+        button:hover { background-color: #0056b3; }
         #risultato {
-            margin-top: 25px;
-            padding: 15px;
-            border-radius: 8px;
-            background: #f9f9f9;
-            border: 1px solid #e0e0e0;
-            display: none;
-            white-space: pre-line;
-            font-size: 15px;
-            line-height: 1.5;
+            margin-top: 25px; padding: 15px; border-radius: 8px; background: #f9f9f9;
+            border: 1px solid #e0e0e0; display: none; white-space: pre-line; font-size: 15px; line-height: 1.5;
         }
         .seo-section {
-            margin-top: 40px;
-            font-size: 13px;
-            color: #777;
-            text-align: center;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
+            margin-top: 40px; font-size: 13px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 20px;
         }
     </style>
 </head>
@@ -98,53 +58,72 @@
 
     <div class="container">
         <h1>Assistente Anti-Truffa</h1>
-        <p class="subtitle">Incolla qui sotto il testo di un SMS, un'email o un messaggio sospetto per analizzarlo subito.</p>
+        <p class="subtitle">Incolla un testo o carica uno screenshot di un messaggio sospetto.</p>
         
-        <textarea id="testoMessaggio" placeholder="Esersempio: Gentile cliente, il suo conto è bloccato, clicca qui per sbloccarlo..."></textarea>
-        <button onclick="analizzaMessaggio()">Analizza Messaggio</button>
+        <textarea id="testoMessaggio" placeholder="Scrivi o incolla qui il messaggio..."></textarea>
+        
+        <div class="file-upload">
+            <label for="imageInput">📸 Oppure carica uno screenshot:</label>
+            <input type="file" id="imageInput" accept="image/*">
+        </div>
+
+        <button onclick="analizzaMessaggio()">Analizza Contenuto</button>
 
         <div id="risultato"></div>
     </div>
 
-    <!-- SEZIONE OTTIMIZZATA PER I MOTORI DI RICERCA (SEO) -->
     <div class="container seo-section">
         <h3>Proteggiti dalle truffe digitali in Italia</h3>
-        <p>Hai ricevuto un messaggio anomalo e ti chiedi <strong>come verificare se un SMS è una truffa</strong>? Il nostro <strong>verificatore phishing online</strong> ti aiuta a smascherare tentativi di frode, e-mail ingannevoli e link malevoli in pochi secondi.</p>
-        <p>Usa il nostro strumento gratuito anche per un rapido <strong>controllo IBAN sospetto</strong> o per valutare comunicazioni da parte di presunti corrieri e istituti bancari.</p>
+        <p>Hai ricevuto un messaggio anomalo? Il nostro <strong>verificatore phishing online</strong> ti permette di analizzare testi o caricare screenshot per smascherare tentativi di frode in pochi secondi.</p>
     </div>
 
     <script>
         async function analizzaMessaggio() {
             const testo = document.getElementById('testoMessaggio').value;
+            const imageInput = document.getElementById('imageInput').files[0];
             const divRisultato = document.getElementById('risultato');
             
-            if (!testo.trim()) {
-                alert('Inserisci un messaggio da analizzare.');
+            if (!testo.trim() && !imageInput) {
+                alert('Inserisci un messaggio o seleziona uno screenshot.');
                 return;
             }
 
             divRisultato.style.display = 'block';
             divRisultato.innerHTML = 'Analisi in corso... 🔍';
 
+            let base64Image = null;
+
+            if (imageInput) {
+                const reader = new FileReader();
+                reader.readAsDataURL(imageInput);
+                reader.onload = async function () {
+                    base64Image = reader.result.split(',')[1];
+                    inviaRichiesta(testo, base64Image);
+                };
+            } else {
+                inviaRichiesta(testo, null);
+            }
+        }
+
+        async function inviaRichiesta(testo, image) {
+            const divRisultato = document.getElementById('risultato');
             try {
                 const response = await fetch('/analizza', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ testo: testo })
+                    body: JSON.stringify({ testo: testo, image: image })
                 });
                 
                 const data = await response.json();
-                
                 if (data.errore) {
                     divRisultato.innerHTML = 'Errore: ' + data.errore;
                 } else {
-                    divRisultato.innerHTML = data.risultato || JSON.stringify(data, null, 2);
+                    divRisultato.innerHTML = data.risultato;
                 }
             } catch (error) {
                 divRisultato.innerHTML = 'Errore di connessione al server.';
             }
         }
     </script>
-
 </body>
 </html>
