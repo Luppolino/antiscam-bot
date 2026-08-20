@@ -3,90 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assistente Anti-Truffa</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- TAG SEO E PAROLE CHIAVE PER GOOGLE -->
+    <title>Verifica Truffe e Phishing Online - Controlla SMS e IBAN Sospetti</title>
+    <meta name="description" content="Il miglior verificatore phishing online gratuito in Italia. Scopri come verificare se un SMS è una truffa ed effettua un controllo IBAN sospetto in un click.">
+    <meta name="keywords" content="come verificare se un SMS è una truffa, verificatore phishing online, controllo IBAN sospetto, sicurezza digitale, anti truffa">
+
+    <!-- Stili grafici leggeri e moderni -->
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-top: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        p.subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
+            resize: vertical;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+        textarea:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #risultato {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            display: none;
+            white-space: pre-line;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        .seo-section {
+            margin-top: 40px;
+            font-size: 13px;
+            color: #777;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+    </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
+<body>
 
-    <div class="max-w-xl w-full mx-auto p-4 sm:p-6 mt-10 bg-white rounded-2xl shadow-sm border border-slate-100">
-        <h1 class="text-2xl font-bold text-slate-900 text-center mb-2">Verifica Messaggio Sospetto</h1>
-        <p class="text-sm text-slate-500 text-center mb-6">Incolla qui SMS, email o WhatsApp per scoprire se si tratta di una truffa.</p>
+    <div class="container">
+        <h1>Assistente Anti-Truffa</h1>
+        <p class="subtitle">Incolla qui sotto il testo di un SMS, un'email o un messaggio sospetto per analizzarlo subito.</p>
+        
+        <textarea id="testoMessaggio" placeholder="Esersempio: Gentile cliente, il suo conto è bloccato, clicca qui per sbloccarlo..."></textarea>
+        <button onclick="analizzaMessaggio()">Analizza Messaggio</button>
 
-        <textarea id="messaggio" rows="5" class="w-full p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm resize-none" placeholder="Esempio: 'Gentile cliente, il suo conto è bloccato, clicchi qui per sbloccare...'"></textarea>
+        <div id="risultato"></div>
+    </div>
 
-        <button onclick="verificaMessaggio()" id="btnVerifica" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition duration-200">
-            Analizza Messaggio
-        </button>
-
-        <!-- Risultato -->
-        <div id="risultato" class="hidden mt-6 p-4 rounded-xl border">
-            <div id="badgeRischio" class="inline-block px-3 py-1 rounded-full text-xs font-bold mb-2"></div>
-            <p id="testoSpiegazione" class="text-sm text-slate-700 mb-3"></p>
-            <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                <span class="text-xs font-bold text-slate-500 block uppercase">Cosa fare:</span>
-                <p id="testoAzione" class="text-sm font-medium text-slate-900"></p>
-            </div>
-        </div>
-
-        <p class="text-xs text-slate-400 text-center mt-6">🔒 I tuoi dati non vengono memorizzati. Analisi protetta nel rispetto della privacy.</p>
+    <!-- SEZIONE OTTIMIZZATA PER I MOTORI DI RICERCA (SEO) -->
+    <div class="container seo-section">
+        <h3>Proteggiti dalle truffe digitali in Italia</h3>
+        <p>Hai ricevuto un messaggio anomalo e ti chiedi <strong>come verificare se un SMS è una truffa</strong>? Il nostro <strong>verificatore phishing online</strong> ti aiuta a smascherare tentativi di frode, e-mail ingannevoli e link malevoli in pochi secondi.</p>
+        <p>Usa il nostro strumento gratuito anche per un rapido <strong>controllo IBAN sospetto</strong> o per valutare comunicazioni da parte di presunti corrieri e istituti bancari.</p>
     </div>
 
     <script>
-        async function verificaMessaggio() {
-            const testo = document.getElementById('messaggio').value;
-            const btn = document.getElementById('btnVerifica');
-            const boxRisultato = document.getElementById('risultato');
+        async function analizzaMessaggio() {
+            const testo = document.getElementById('testoMessaggio').value;
+            const divRisultato = document.getElementById('risultato');
             
             if (!testo.trim()) {
-                alert('Inserisci del testo prima di verificare.');
+                alert('Inserisci un messaggio da analizzare.');
                 return;
             }
 
-            btn.disabled = true;
-            btn.innerText = 'Analisi in corso...';
-            boxRisultato.classList.add('hidden');
+            divRisultato.style.display = 'block';
+            divRisultato.innerHTML = 'Analisi in corso... 🔍';
 
             try {
                 const response = await fetch('/analizza', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ testo })
+                    body: JSON.stringify({ testo: testo })
                 });
-
+                
                 const data = await response.json();
                 
-                if (response.ok) {
-                    document.getElementById('testoSpiegazione').innerText = data.spiegazione;
-                    document.getElementById('testoAzione').innerText = data.azione_consigliata;
-                    
-                    const badge = document.getElementById('badgeRischio');
-                    boxRisultato.className = "mt-6 p-4 rounded-xl border";
-                    
-                    if (data.livello_rischio === "Alto") {
-                        badge.className = "inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 bg-red-100 text-red-700";
-                        badge.innerText = "🔴 ALTO RISCHIO DI TRUFFA";
-                        boxRisultato.classList.add("bg-red-50", "border-red-200");
-                    } else if (data.livello_rischio === "Sospetto") {
-                        badge.className = "inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 bg-amber-100 text-amber-700";
-                        badge.innerText = "🟡 ATTENZIONE - MESSAGGIO DUBBIO";
-                        boxRisultato.classList.add("bg-amber-50", "border-amber-200");
-                    } else {
-                        badge.className = "inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 bg-emerald-100 text-emerald-700";
-                        badge.innerText = "🟢 RISCHIO BASSO";
-                        boxRisultato.classList.add("bg-emerald-50", "border-emerald-200");
-                    }
-                    
-                    boxRisultato.classList.remove('hidden');
+                if (data.errore) {
+                    divRisultato.innerHTML = 'Errore: ' + data.errore;
                 } else {
-                    alert(data.errore || 'Errore imprevisto.');
+                    divRisultato.innerHTML = data.risultato || JSON.stringify(data, null, 2);
                 }
-            } catch (err) {
-                alert('Errore di connessione al server.');
-            } finally {
-                btn.disabled = false;
-                btn.innerText = 'Analizza Messaggio';
+            } catch (error) {
+                divRisultato.innerHTML = 'Errore di connessione al server.';
             }
         }
     </script>
+
 </body>
 </html>
