@@ -19,21 +19,33 @@ def maschera_dati_sensibili(testo):
     testo = re.sub(r'\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b', '[CARTA_OSCURATA]', testo)
     return testo
 
+def estrai_url(testo):
+    if not testo:
+        return []
+    url_pattern = r'https?://[^\s<>"]+|www\.[^\s<>"]+'
+    return re.findall(url_pattern, testo)
+
 def analizza_con_ia(testo="", image_base64=None):
+    link_trovati = estrai_url(testo) if testo else []
+    link_str = ", ".join(link_trovati) if link_trovati else "Nessun link esplicito nel testo"
+
     system_prompt = (
-        "Sei un assistente esperto in cybersecurity e prevenzione delle truffe digitali in Italia. "
-        "Analizza il testo o l'immagine ricevuta e rispondi in modo chiaro e diretto con questa struttura:\n"
+        "Sei un esperto di cybersecurity in Italia specializzato in phishing, truffe online e marketplace. "
+        "Analizza il contenuto, fai molta attenzione ai link presenti (controllando domini contraffatti, "
+        "typosquatting, o siti e-commerce falsi) e ai segnali di truffa nei pagamenti (es. ricariche non tracciabili). "
+        "Rispondi in modo chiaro e diretto con questa struttura:\n"
         "⚠️ RISCHIO: [Basso / Sospetto / Alto]\n"
+        "🔗 ANALISI LINK: Valutazione specifica del dominio o dei link trovati.\n"
         "📋 SPIEGAZIONE: Breve spiegazione dei pericoli.\n"
         "💡 COSA FARE: Azione concreta per l'utente."
     )
     
     user_content = []
-    text_prompt = "Analizza questo contenuto per individuare eventuali truffe o tentativi di phishing:"
+    text_prompt = f"Analizza questo contenuto anti-truffa.\nLink rilevati nel testo: {link_str}"
     
     if testo and str(testo).strip():
         testo_pulito = maschera_dati_sensibili(testo)
-        text_prompt += f"\nTesto: {testo_pulito}"
+        text_prompt += f"\nTesto completo: {testo_pulito}"
         
     user_content.append({"type": "text", "text": text_prompt})
     
@@ -79,16 +91,29 @@ def telegram_bot():
             msg = data["message"]
             chat_id = msg["chat"]["id"]
             
-            # Gestione Testo
             if "text" in msg:
                 testo_utente = msg["text"]
+                
                 if testo_utente.startswith('/start'):
-                    risposta = "Ciao! Sono il tuo assistente anti-truffa. Incolla un testo o inviami uno screenshot di un messaggio sospetto!"
+                    risposta = "Ciao! Sono il tuo assistente anti-truffa. Incolla un testo o inviami uno screenshot di un messaggio sospetto.\n\nDigita /menu per vedere cosa posso controllare!"
+                elif testo_utente.startswith('/menu'):
+                    risposta = (
+                        "🚨 **Assistente Anti-Truffa - Menu** 🚨\n\n"
+                        "Invia un testo o uno screenshot per analizzare:\n\n"
+                        "📱 **Phishing & Messaggi**\n"
+                        "- SMS finti corrieri / pacchi\n"
+                        "- Finti blocchi conto bancario\n"
+                        "- Tentativi di phishing email/SMS\n\n"
+                        "🛒 **Marketplace & Vendite**\n"
+                        "- Finti venditori su Facebook/Subito\n"
+                        "- Siti e-commerce sospetti\n"
+                        "- Richieste di pagamenti non tracciabili"
+                    )
                 else:
                     risposta = analizza_con_ia(testo=testo_utente)
-                requests.post(TELEGRAM_API_URL, json={"chat_id": chat_id, "text": risposta})
                 
-            # Gestione Foto / Screenshot
+                requests.post(TELEGRAM_API_URL, json={"chat_id": chat_id, "text": risposta, "parse_mode": "Markdown"})
+                
             elif "photo" in msg:
                 file_id = msg["photo"][-1]["file_id"]
                 file_info = requests.get(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getFile?file_id={file_id}").json()
