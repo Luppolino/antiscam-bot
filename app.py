@@ -7,7 +7,7 @@ app = FastAPI()
 # Token segreto per la verifica di Meta (WhatsApp)
 VERIFY_TOKEN = "antiscam_token_segreto_123"
 
-# 1. Pagina principale grafica in HTML con interfaccia di analisi
+# 1. Pagina principale grafica con Interfaccia di Analisi (Testo + Screenshot OCR) e Bacheca
 @app.get("/", response_class=HTMLResponse)
 def read_root():
     html_content = """
@@ -16,7 +16,7 @@ def read_root():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>NonCiCascoMai - Antiscam Bot</title>
+        <title>NonCiCascoMai - Il tuo scudo anti-truffa</title>
         <style>
             :root {
                 --bg-color: #0f172a;
@@ -26,6 +26,7 @@ def read_root():
                 --accent: #38bdf8;
                 --accent-hover: #0ea5e9;
                 --border: #334155;
+                --danger: #ef4444;
             }
             body {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -40,8 +41,9 @@ def read_root():
             }
             .container {
                 width: 100%;
-                max-width: 600px;
-                margin-top: 20px;
+                max-width: 650px;
+                margin-top: 10px;
+                margin-bottom: 40px;
             }
             .card {
                 background-color: var(--card-bg);
@@ -49,11 +51,12 @@ def read_root():
                 border-radius: 16px;
                 box-shadow: 0 10px 25px rgba(0,0,0,0.5);
                 border: 1px solid var(--border);
+                margin-bottom: 25px;
             }
             h1 {
                 color: var(--accent);
                 margin-top: 0;
-                font-size: 24px;
+                font-size: 26px;
                 text-align: center;
             }
             p.subtitle {
@@ -73,7 +76,7 @@ def read_root():
             }
             textarea {
                 width: 100%;
-                height: 120px;
+                height: 100px;
                 padding: 12px;
                 border-radius: 8px;
                 border: 1px solid var(--border);
@@ -86,6 +89,24 @@ def read_root():
             textarea:focus {
                 outline: none;
                 border-color: var(--accent);
+            }
+            .file-upload {
+                border: 2px dashed var(--border);
+                padding: 15px;
+                border-radius: 8px;
+                text-align: center;
+                background-color: #0f172a;
+                cursor: pointer;
+                margin-bottom: 20px;
+            }
+            .file-upload input {
+                display: none;
+            }
+            .file-upload label {
+                cursor: pointer;
+                color: var(--text-muted);
+                margin: 0;
+                font-size: 14px;
             }
             button {
                 width: 100%;
@@ -123,10 +144,37 @@ def read_root():
                 border-radius: 50%;
                 display: inline-block;
             }
+            /* Bacheca delle truffe */
+            .board-title {
+                font-size: 18px;
+                color: var(--accent);
+                margin-bottom: 15px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .scam-alert {
+                background-color: rgba(239, 68, 68, 0.1);
+                border-left: 4px solid var(--danger);
+                padding: 12px 15px;
+                border-radius: 0 8px 8px 0;
+                margin-bottom: 12px;
+                font-size: 13px;
+            }
+            .scam-alert h4 {
+                margin: 0 0 5px 0;
+                color: #fca5a5;
+                font-size: 14px;
+            }
+            .scam-alert p {
+                margin: 0;
+                color: var(--text-muted);
+            }
         </style>
     </head>
     <body>
         <div class="container">
+            <!-- Box Principale Analisi (Testo + OCR Screenshot) -->
             <div class="card">
                 <div class="status">
                     <span class="dot"></span> Sistema Operativo e Online
@@ -138,8 +186,36 @@ def read_root():
                     <label for="scamText">Incolla qui il testo del messaggio sospetto:</label>
                     <textarea id="scamText" placeholder="Es. Ciao! Poste Italiane: il tuo conto è bloccato, clicca qui per sbloccarlo..."></textarea>
                 </div>
+
+                <div class="input-group">
+                    <label>Oppure carica uno screenshot (Riconoscimento OCR):</label>
+                    <div class="file-upload" onclick="document.getElementById('screenshotFile').click()">
+                        <label for="screenshotFile">📷 Clicca qui per selezionare un'immagine o uno screenshot</label>
+                        <input type="file" id="screenshotFile" accept="image/*">
+                    </div>
+                </div>
                 
-                <button onclick="alert('Funzione di analisi pronta! Collegheremo presto l\\'intelligenza artificiale.')">Analizza Contenuto</button>
+                <button onclick="alert('Funzione di analisi (Testo + OCR) pronta!')">Analizza Contenuto</button>
+            </div>
+
+            <!-- Bacheca Ultime Truffe -->
+            <div class="card">
+                <div class="board-title">🚨 Bacheca Allerte & Ultime Truffe</div>
+                
+                <div class="scam-alert">
+                    <h4>Finto SMS Poste / Corriere (Pacco in giacenza)</h4>
+                    <p>Messaggi che invitano a pagare 1,99€ per sbloccare una spedizione o aggiornare i dati del conto. Non cliccare mai sui link abbreviati.</p>
+                </div>
+
+                <div class="scam-alert">
+                    <h4>Campagna Phishing Agenzia delle Entrate</h4>
+                    <p>False comunicazioni su presunte anomalie o scadenze per cripto-asset e dichiarazioni. Ricorda che l'Agenzia non invia mai link diretti via SMS.</p>
+                </div>
+
+                <div class="scam-alert">
+                    <h4>Truffe su Marketplace (Subito, Vinted, FB)</h4>
+                    <p>Venditori o acquirenti che chiedono di spostare la chat su WhatsApp o mandano link di pagamento falsi (es. finto escrow).</p>
+                </div>
             </div>
         </div>
     </body>
