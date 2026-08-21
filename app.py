@@ -1,156 +1,180 @@
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse
-from pydantic import BaseModel
-import os
+from fastapi import FastAPI, Request, Response
+from fastapi.responses import HTMLResponse
+import uvicorn
 
-app = FastAPI(title="NonCiCascoMai - Anti-Phishing Assistant")
+app = FastAPI()
 
-# Modello dati per l'analisi tramite interfaccia web
-class MessageRequest(BaseModel):
-    message: str
+# Token segreto per la verifica di Meta (WhatsApp)
+VERIFY_TOKEN = "antiscam_token_segreto_123"
 
-def analyze_text(text: str) -> dict:
-    """
-    Logica di analisi euristica e simulazione controllo frodi.
-    Qui puoi integrare la chiamata al modello LLM o le regole di pattern matching.
-    """
-    text_lower = text.lower()
-    risk_score = 0
-    warnings = []
-
-    # Esempi di keyword sospette
-    scam_keywords = ["agenzia delle entrate", "INPS", "pacco in giacenza", "vinto", "urgente", "clicca qui", "banca", "aggiorna i dati", "verifica il conto"]
-    
-    for kw in scam_keywords:
-        if kw in text_lower:
-            risk_score += 25
-            warnings.append(f"Rilevata parola chiave sospetta: '{kw}'")
-
-    if "http://" in text_lower or "https://" in text_lower:
-        risk_score += 20
-        warnings.append("Presente un link esterno (verificare attentamente il dominio).")
-
-    if risk_score > 70:
-        level = "ALTO RISCHIO - Possibile Tentativo di Truffa!"
-    elif risk_score > 30:
-        level = "RISCHIO MODERATO - Prestare attenzione."
-    else:
-        level = "Basso rischio apparente."
-
-    return {
-        "risk_score": min(risk_score, 100),
-        "risk_level": level,
-        "warnings": warnings if warnings else ["Nessuna minaccia evidente rilevata dai pattern di base."]
-    }
-
+# 1. Pagina principale grafica in HTML con interfaccia di analisi
 @app.get("/", response_class=HTMLResponse)
-async def dashboard():
-    """Interfaccia grafica web locale per testare i messaggi."""
+def read_root():
     html_content = """
     <!DOCTYPE html>
     <html lang="it">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>NonCiCascoMai - Anti-Phishing Assistant</title>
+        <title>NonCiCascoMai - Antiscam Bot</title>
         <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
-            .container { width: 100%; max-width: 600px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-            h1 { color: #2c3e50; font-size: 24px; margin-bottom: 5px; }
-            .status { display: inline-block; width: 10px; height: 10px; background-color: #2ecc71; border-radius: 50%; margin-right: 5px; }
-            .subtitle { color: #7f8c8d; font-size: 14px; margin-bottom: 25px; }
-            textarea { width: 100%; height: 120px; padding: 12px; border: 1px solid #dcdde1; border-radius: 8px; font-size: 14px; resize: vertical; box-sizing: border-box; }
-            button { background-color: #3498db; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 15px; transition: background 0.2s; }
-            button:hover { background-color: #2980b9; }
-            #result { margin-top: 25px; padding: 15px; border-radius: 8px; background: #f8f9fa; border-left: 5px solid #bdc3c7; display: none; }
-            .high-risk { border-left-color: #e74c3c !important; background: #fdeaea !important; }
-            .med-risk { border-left-color: #f39c12 !important; background: #fef5e7 !important; }
-            .low-risk { border-left-color: #2ecc71 !important; background: #eafaf1 !important; }
+            :root {
+                --bg-color: #0f172a;
+                --card-bg: #1e293b;
+                --text-color: #f8fafc;
+                --text-muted: #94a3b8;
+                --accent: #38bdf8;
+                --accent-hover: #0ea5e9;
+                --border: #334155;
+            }
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: var(--bg-color);
+                color: var(--text-color);
+                margin: 0;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                min-height: 100vh;
+            }
+            .container {
+                width: 100%;
+                max-width: 600px;
+                margin-top: 20px;
+            }
+            .card {
+                background-color: var(--card-bg);
+                padding: 30px;
+                border-radius: 16px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+                border: 1px solid var(--border);
+            }
+            h1 {
+                color: var(--accent);
+                margin-top: 0;
+                font-size: 24px;
+                text-align: center;
+            }
+            p.subtitle {
+                color: var(--text-muted);
+                text-align: center;
+                margin-bottom: 25px;
+                font-size: 14px;
+            }
+            .input-group {
+                margin-bottom: 20px;
+            }
+            label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 600;
+                font-size: 14px;
+            }
+            textarea {
+                width: 100%;
+                height: 120px;
+                padding: 12px;
+                border-radius: 8px;
+                border: 1px solid var(--border);
+                background-color: #0f172a;
+                color: var(--text-color);
+                resize: vertical;
+                font-size: 14px;
+                box-sizing: border-box;
+            }
+            textarea:focus {
+                outline: none;
+                border-color: var(--accent);
+            }
+            button {
+                width: 100%;
+                background-color: var(--accent);
+                color: #0f172a;
+                border: none;
+                padding: 14px;
+                border-radius: 8px;
+                font-weight: bold;
+                font-size: 16px;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+            button:hover {
+                background-color: var(--accent-hover);
+            }
+            .status {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                background-color: rgba(34, 197, 94, 0.1);
+                color: #22c55e;
+                padding: 8px 14px;
+                border-radius: 20px;
+                font-size: 13px;
+                margin-bottom: 20px;
+                border: 1px solid rgba(34, 197, 94, 0.2);
+                font-weight: 600;
+            }
+            .dot {
+                height: 8px;
+                width: 8px;
+                background-color: #22c55e;
+                border-radius: 50%;
+                display: inline-block;
+            }
         </style>
     </head>
     <body>
         <div class="container">
-            <h1>🛡️ NonCiCascoMai</h1>
-            <div class="subtitle"><span class="status"></span>Sistema attivo e operativo</div>
-            
-            <label for="msg">Incolla qui il messaggio sospetto (SMS, WhatsApp, Email):</label>
-            <textarea id="msg" placeholder="Es: Poste Italiane: accesso non autorizzato rilevato, clicca qui per sbloccare il conto..."></textarea>
-            
-            <button onclick="checkMessage()">Analizza Messaggio</button>
-            
-            <div id="result">
-                <h3 id="res-title">Risultato</h3>
-                <p id="res-level"><strong>Livello:</strong> <span></span></p>
-                <ul id="res-warnings"></ul>
+            <div class="card">
+                <div class="status">
+                    <span class="dot"></span> Sistema Operativo e Online
+                </div>
+                <h1>NonCiCascoMai</h1>
+                <p class="subtitle">Il tuo scudo personale contro truffe, phishing e raggiri online.</p>
+                
+                <div class="input-group">
+                    <label for="scamText">Incolla qui il testo del messaggio sospetto:</label>
+                    <textarea id="scamText" placeholder="Es. Ciao! Poste Italiane: il tuo conto è bloccato, clicca qui per sbloccarlo..."></textarea>
+                </div>
+                
+                <button onclick="alert('Funzione di analisi pronta! Collegheremo presto l\\'intelligenza artificiale.')">Analizza Contenuto</button>
             </div>
         </div>
-
-        <script>
-            async function checkMessage() {
-                const text = document.getElementById('msg').value;
-                if (!text.trim()) {
-                    alert('Inserisci un testo da analizzare.');
-                    return;
-                }
-
-                const response = await fetch('/analyze', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text })
-                });
-
-                const data = await response.json();
-                const resultDiv = document.getElementById('result');
-                const resLevel = document.getElementById('res-level').querySelector('span');
-                const resWarnings = document.getElementById('res-warnings');
-                
-                resWarnings.innerHTML = '';
-                data.warnings.forEach(w => {
-                    const li = document.createElement('li');
-                    li.textContent = w;
-                    resWarnings.appendChild(li);
-                });
-
-                resLevel.textContent = data.risk_level;
-                resultDiv.style.display = 'block';
-
-                resultDiv.className = '';
-                if (data.risk_score > 70) {
-                    resultDiv.classList.add('high-risk');
-                } else if (data.risk_score > 30) {
-                    resultDiv.classList.add_('med-risk'); // Nota: fixato classe css pulita
-                } else {
-                    resultDiv.classList.add('low-risk');
-                }
-            }
-        </script>
     </body>
     </html>
     """
-    return HTMLResponse(content=html_content)
+    return html_content
 
-@app.post("/analyze")
-async def analyze_endpoint(payload: MessageRequest):
-    """API endpoint per l'analisi dei messaggi."""
-    result = analyze_text(payload.message)
-    return JSONResponse(content=result)
-
-@app.post("/webhook/whatsapp")
-async def whatsapp_webhook(request: Request):
-    """Webhook predisposto per ricevere i messaggi da WhatsApp (Meta for Developers)."""
-    body = await request.json()
-    # Logica di estrazione messaggio da payload WhatsApp da implementare in base al formato Meta
-    return {"status": "received"}
-
-@app.get("/webhook/whatsapp")
+# 2. Webhook WhatsApp (GET per la verifica di Meta)
+@app.get("/webhook")
 async def verify_whatsapp(request: Request):
-    """Verifica iniziale del webhook per la configurazione Meta."""
-    params = request.query_params
-    hub_mode = params.get("hub.mode")
-    hub_challenge = params.get("hub.challenge")
-    hub_verify_token = params.get("hub.verify_token")
+    mode = request.query_params.get("hub.mode")
+    token = request.query_params.get("hub.verify_token")
+    challenge = request.query_params.get("hub.challenge")
     
-    # Sostituisci "il_tuo_token_segreto" con quello impostato su Meta
-    if hub_mode == "subscribe" and hub_verify_token == "il_tuo_token_segreto":
-        return int(hub_challenge)
-    raise HTTPException(status_code=403, detail="Token di verifica non valido")
+    if mode and token:
+        if mode == "subscribe" and token == VERIFY_TOKEN:
+            return Response(content=challenge, media_type="text/plain")
+        else:
+            return Response(content="Token non valido", status_code=403)
+    return Response(content="Parametri mancanti", status_code=400)
+
+# 3. Webhook WhatsApp (POST per ricevere i messaggi)
+@app.post("/webhook")
+async def receive_whatsapp(request: Request):
+    body = await request.json()
+    print("Messaggio WhatsApp ricevuto:", body)
+    return {"status": "EVENT_RECEIVED"}
+
+# 4. Webhook Telegram (POST per ricevere i messaggi dal bot Telegram)
+@app.post("/telegram-webhook")
+async def receive_telegram(request: Request):
+    body = await request.json()
+    print("Messaggio Telegram ricevuto:", body)
+    return {"status": "TELEGRAM_RECEIVED"}
+
+# Avvio del server per Render sulla porta 10000
+if __name__ == "__main__":
+    uvicorn.run("app:app", host="0.0.0.0", port=10000)
