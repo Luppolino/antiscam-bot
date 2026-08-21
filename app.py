@@ -1,10 +1,9 @@
 from fastapi import FastAPI, Request, Response
-from pydantic import BaseModel
-import os
+import uvicorn
 
 app = FastAPI()
 
-# Token segreto per la verifica di Meta (puoi cambiarlo con quello che preferisci)
+# Token segreto per la verifica di Meta
 VERIFY_TOKEN = "antiscam_token_segreto_123"
 
 @app.get("/")
@@ -20,19 +19,18 @@ async def verify_webhook(request: Request):
     
     if mode and token:
         if mode == "subscribe" and token == VERIFY_TOKEN:
-            # Restituisce la challenge come intero/stringa richiesta da Meta
             return Response(content=challenge, media_type="text/plain")
         else:
             return Response(content="Token non valido", status_code=403)
     return Response(content="Parametri mancanti", status_code=400)
 
-# 2. Rotta POST per ricevere i messaggi veri e propri da WhatsApp
+# 2. Rotta POST per ricevere i messaggi da WhatsApp
 @app.post("/webhook")
 async def receive_webhook(request: Request):
     body = await request.json()
-    
-    # Qui puoi stampare o elaborare il messaggio in arrivo
     print("Messaggio ricevuto da WhatsApp:", body)
-    
-    # Risposta obbligatoria per confermare a Meta la ricezione
     return {"status": "EVENT_RECEIVED"}
+
+# Avvio del server per Render sulla porta corretta
+if __name__ == "__main__":
+    uvicorn.run("app:app", host="0.0.0.0", port=10000)
