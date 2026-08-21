@@ -7,7 +7,7 @@ app = FastAPI()
 # Token segreto per la verifica di Meta (WhatsApp)
 VERIFY_TOKEN = "antiscam_token_segreto_123"
 
-# 1. Pagina principale grafica con Interfaccia di Analisi (Testo + Screenshot OCR) e Bacheca
+# 1. Pagina principale grafica (Tema Chiaro, Accattivante e Illustrazione Personalizzata)
 @app.get("/", response_class=HTMLResponse)
 def read_root():
     html_content = """
@@ -19,14 +19,16 @@ def read_root():
         <title>NonCiCascoMai - Il tuo scudo anti-truffa</title>
         <style>
             :root {
-                --bg-color: #0f172a;
-                --card-bg: #1e293b;
-                --text-color: #f8fafc;
-                --text-muted: #94a3b8;
-                --accent: #38bdf8;
-                --accent-hover: #0ea5e9;
-                --border: #334155;
+                --bg-color: #f8fafc;
+                --card-bg: #ffffff;
+                --text-color: #1e293b;
+                --text-muted: #64748b;
+                --accent: #0284c7;
+                --accent-hover: #0369a1;
+                --border: #e2e8f0;
                 --danger: #ef4444;
+                --success-bg: #f0fdf4;
+                --success-text: #16a34a;
             }
             body {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -41,63 +43,89 @@ def read_root():
             }
             .container {
                 width: 100%;
-                max-width: 650px;
+                max-width: 600px;
                 margin-top: 10px;
                 margin-bottom: 40px;
             }
             .card {
                 background-color: var(--card-bg);
-                padding: 30px;
-                border-radius: 16px;
-                box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+                padding: 35px 30px;
+                border-radius: 20px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.05);
                 border: 1px solid var(--border);
                 margin-bottom: 25px;
+                text-align: center;
+            }
+            /* Icona Mostriciattolo Pescatore Personalizzata */
+            .logo-container {
+                width: 90px;
+                height: 90px;
+                background: linear-gradient(1355deg, #e0f2fe 0%, #bae6fd 100%);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 20px auto;
+                box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
+            }
+            .logo-container svg {
+                width: 50px;
+                height: 50px;
+                fill: #0284c7;
             }
             h1 {
-                color: var(--accent);
+                color: #0f172a;
                 margin-top: 0;
                 font-size: 26px;
-                text-align: center;
+                font-weight: 700;
             }
             p.subtitle {
                 color: var(--text-muted);
-                text-align: center;
                 margin-bottom: 25px;
-                font-size: 14px;
+                font-size: 15px;
+                line-height: 1.5;
             }
             .input-group {
                 margin-bottom: 20px;
+                text-align: left;
             }
             label {
                 display: block;
                 margin-bottom: 8px;
                 font-weight: 600;
                 font-size: 14px;
+                color: #334155;
             }
             textarea {
                 width: 100%;
-                height: 100px;
+                height: 110px;
                 padding: 12px;
-                border-radius: 8px;
+                border-radius: 10px;
                 border: 1px solid var(--border);
-                background-color: #0f172a;
+                background-color: #f8fafc;
                 color: var(--text-color);
                 resize: vertical;
                 font-size: 14px;
                 box-sizing: border-box;
+                transition: border-color 0.2s;
             }
             textarea:focus {
                 outline: none;
                 border-color: var(--accent);
+                background-color: #ffffff;
             }
             .file-upload {
-                border: 2px dashed var(--border);
+                border: 2px dashed #cbd5e1;
                 padding: 15px;
-                border-radius: 8px;
+                border-radius: 10px;
                 text-align: center;
-                background-color: #0f172a;
+                background-color: #f8fafc;
                 cursor: pointer;
                 margin-bottom: 20px;
+                transition: background-color 0.2s;
+            }
+            .file-upload:hover {
+                background-color: #f1f5f9;
             }
             .file-upload input {
                 display: none;
@@ -107,78 +135,92 @@ def read_root():
                 color: var(--text-muted);
                 margin: 0;
                 font-size: 14px;
+                font-weight: normal;
             }
-            button {
+            button.action-btn {
                 width: 100%;
                 background-color: var(--accent);
-                color: #0f172a;
+                color: #ffffff;
                 border: none;
                 padding: 14px;
-                border-radius: 8px;
+                border-radius: 10px;
                 font-weight: bold;
                 font-size: 16px;
                 cursor: pointer;
-                transition: background-color 0.2s;
+                transition: background-color 0.2s, transform 0.1s;
+                box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
             }
-            button:hover {
+            button.action-btn:hover {
                 background-color: var(--accent-hover);
             }
             .status {
-                display: flex;
+                display: inline-flex;
                 align-items: center;
-                justify-content: center;
                 gap: 8px;
-                background-color: rgba(34, 197, 94, 0.1);
-                color: #22c55e;
-                padding: 8px 14px;
+                background-color: var(--success-bg);
+                color: var(--success-text);
+                padding: 6px 14px;
                 border-radius: 20px;
                 font-size: 13px;
                 margin-bottom: 20px;
-                border: 1px solid rgba(34, 197, 94, 0.2);
+                border: 1px solid rgba(22, 163, 74, 0.2);
                 font-weight: 600;
             }
             .dot {
                 height: 8px;
                 width: 8px;
-                background-color: #22c55e;
+                background-color: var(--success-text);
                 border-radius: 50%;
                 display: inline-block;
             }
             /* Bacheca delle truffe */
             .board-title {
-                font-size: 18px;
-                color: var(--accent);
+                font-size: 17px;
+                color: #0f172a;
                 margin-bottom: 15px;
                 display: flex;
                 align-items: center;
                 gap: 8px;
+                font-weight: 700;
+                text-align: left;
             }
             .scam-alert {
-                background-color: rgba(239, 68, 68, 0.1);
+                background-color: #fff1f2;
                 border-left: 4px solid var(--danger);
-                padding: 12px 15px;
-                border-radius: 0 8px 8px 0;
+                padding: 14px 16px;
+                border-radius: 0 10px 10px 0;
                 margin-bottom: 12px;
                 font-size: 13px;
+                text-align: left;
             }
             .scam-alert h4 {
                 margin: 0 0 5px 0;
-                color: #fca5a5;
+                color: #991b1b;
                 font-size: 14px;
+                font-weight: 700;
             }
             .scam-alert p {
                 margin: 0;
-                color: var(--text-muted);
+                color: #475569;
+                line-height: 1.4;
             }
         </style>
     </head>
     <body>
         <div class="container">
-            <!-- Box Principale Analisi (Testo + OCR Screenshot) -->
+            <!-- Box Principale Analisi -->
             <div class="card">
                 <div class="status">
                     <span class="dot"></span> Sistema Operativo e Online
                 </div>
+                
+                <!-- Icona Mostriciattolo Pescatore (Ispirata al concept pulito) -->
+                <div class="logo-container">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                    </svg>
+                </div>
+
                 <h1>NonCiCascoMai</h1>
                 <p class="subtitle">Il tuo scudo personale contro truffe, phishing e raggiri online.</p>
                 
@@ -195,7 +237,7 @@ def read_root():
                     </div>
                 </div>
                 
-                <button onclick="alert('Funzione di analisi (Testo + OCR) pronta!')">Analizza Contenuto</button>
+                <button class="action-btn" onclick="alert('Funzione di analisi (Testo + OCR) pronta!')">Analizza Contenuto</button>
             </div>
 
             <!-- Bacheca Ultime Truffe -->
@@ -209,12 +251,12 @@ def read_root():
 
                 <div class="scam-alert">
                     <h4>Campagna Phishing Agenzia delle Entrate</h4>
-                    <p>False comunicazioni su presunte anomalie o scadenze per cripto-asset e dichiarazioni. Ricorda che l'Agenzia non invia mai link diretti via SMS.</p>
+                    <p>False comunicazioni su presunte anomalie o scadenze. Ricorda che l'Agenzia non invia mai link diretti o richieste di pagamento via SMS.</p>
                 </div>
 
                 <div class="scam-alert">
                     <h4>Truffe su Marketplace (Subito, Vinted, FB)</h4>
-                    <p>Venditori o acquirenti che chiedono di spostare la chat su WhatsApp o mandano link di pagamento falsi (es. finto escrow).</p>
+                    <p>Venditori o acquirenti che chiedono di spostare la chat su WhatsApp o mandano link di pagamento falsi fingendosi il corriere.</p>
                 </div>
             </div>
         </div>
