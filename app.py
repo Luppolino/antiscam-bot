@@ -1,7 +1,8 @@
 import os
+import json
+import urllib.request
 from fastapi import FastAPI, Request
 from urllib.parse import urlparse
-import requests
 
 # Inizializzazione dell'applicazione ASGI per Render / Uvicorn
 app = FastAPI()
@@ -106,7 +107,7 @@ def read_root():
 @app.post("/telegram")
 async def telegram_webhook(request: Request):
     """
-    Riceve i messaggi in arrivo da Telegram ed evita l'errore 404.
+    Riceve i messaggi in arrivo da Telegram usando solo librerie native di Python.
     """
     try:
         data = await request.json()
@@ -116,13 +117,13 @@ async def telegram_webhook(request: Request):
             chat_id = message["chat"]["id"]
             text = message.get("text", "")
             
-            # Esempio di risposta preliminare basata sui nostri filtri
+            # Analisi preliminare con i nostri filtri
             reply_text = "Analisi in corso..."
             if text:
                 domain_check = analyze_domain_safety(text)
                 reply_text = f"{domain_check}\n\nAnalisi di sicurezza completata."
             
-            # Invia la risposta indietro su Telegram se il token è configurato
+            # Invia la risposta indietro su Telegram usando urllib (senza dipendenze esterne)
             if BOT_TOKEN:
                 tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
                 payload = {
@@ -130,7 +131,9 @@ async def telegram_webhook(request: Request):
                     "text": reply_text,
                     "parse_mode": "Markdown"
                 }
-                requests.post(tg_url, json=payload)
+                data_encoded = json.dumps(payload).encode('utf-8')
+                req = urllib.request.Request(tg_url, data=data_encoded, headers={'Content-Type': 'application/json'})
+                urllib.request.urlopen(req)
                 
     except Exception as e:
         print(f"Errore nella gestione del webhook Telegram: {e}")
