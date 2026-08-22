@@ -7,7 +7,7 @@ from google.genai import types
 
 app = FastAPI()
 
-# Inizializzazione del client ufficiale Google GenAI (prende la chiave da GEMINI_API_KEY su Render)
+# Inizializzazione del client ufficiale Google GenAI
 api_key = os.environ.get("GEMINI_API_KEY", "")
 client = genai.Client(api_key=api_key) if api_key else None
 
@@ -179,7 +179,6 @@ def read_root():
                 border-radius: 50%;
                 display: inline-block;
             }
-            /* Risultato dell'analisi */
             #resultBox {
                 margin-top: 20px;
                 padding: 15px;
@@ -192,7 +191,6 @@ def read_root():
                 border: 1px solid var(--border);
                 white-space: pre-wrap;
             }
-            /* Bacheca delle truffe */
             .board-title {
                 font-size: 17px;
                 color: #0f172a;
@@ -227,7 +225,6 @@ def read_root():
     </head>
     <body>
         <div class="container">
-            <!-- Box Principale Analisi -->
             <div class="card">
                 <div class="status">
                     <span class="dot"></span> Sistema Operativo e Online
@@ -260,7 +257,6 @@ def read_root():
                 <div id="resultBox"></div>
             </div>
 
-            <!-- Bacheca Ultime Truffe -->
             <div class="card">
                 <div class="board-title">🚨 Bacheca Allerte & Ultime Truffe</div>
                 
@@ -330,7 +326,7 @@ def read_root():
     """
     return html_content
 
-# 2. API di Analisi con il nuovo SDK Google GenAI (gemini-2.5-flash)
+# 2. API di Analisi con il modello aggiornato gemini-3.6-flash
 @app.post("/api/analyze")
 async def analyze_api(text: str = Form(None), file: UploadFile = File(None)):
     try:
@@ -357,7 +353,7 @@ async def analyze_api(text: str = Form(None), file: UploadFile = File(None)):
             contents.append(types.Part.from_bytes(data=image_bytes, mime_type=file.content_type))
 
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.6-flash',
             contents=contents
         )
         
@@ -366,7 +362,7 @@ async def analyze_api(text: str = Form(None), file: UploadFile = File(None)):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-# 3. Webhook WhatsApp (GET per la verifica di Meta)
+# 3. Webhook WhatsApp
 @app.get("/webhook")
 async def verify_whatsapp(request: Request):
     mode = request.query_params.get("hub.mode")
@@ -380,20 +376,16 @@ async def verify_whatsapp(request: Request):
             return Response(content="Token non valido", status_code=403)
     return Response(content="Parametri mancanti", status_code=400)
 
-# 4. Webhook WhatsApp (POST per ricevere i messaggi)
 @app.post("/webhook")
 async def receive_whatsapp(request: Request):
     body = await request.json()
-    print("Messaggio WhatsApp ricevuto:", body)
     return {"status": "EVENT_RECEIVED"}
 
-# 5. Webhook Telegram (POST per ricevere i messaggi dal bot Telegram)
+# 4. Webhook Telegram
 @app.post("/telegram-webhook")
 async def receive_telegram(request: Request):
     body = await request.json()
-    print("Messaggio Telegram ricevuto:", body)
     return {"status": "TELEGRAM_RECEIVED"}
 
-# Avvio del server per Render sulla porta 10000
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=10000)
