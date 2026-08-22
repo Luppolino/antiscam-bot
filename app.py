@@ -11,7 +11,7 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
 VERIFY_TOKEN = "antiscam_token_segreto_123"
 
-# Funzione universale per interrogare Gemini via HTTP
+# Funzione blindata per interrogare Gemini via HTTP
 async def ask_gemini(prompt_text: str):
     if not GEMINI_API_KEY:
         return "Errore: API Key di Gemini non configurata su Render."
@@ -23,11 +23,22 @@ async def ask_gemini(prompt_text: str):
     
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.post(url, json=payload, timeout=20.0)
+            response = await client.post(url, json=payload, timeout=25.0)
             data = response.json()
-            return data["candidates"][0]["content"]["parts"][0]["text"]
+            
+            # Controllo di sicurezza per evitare errori se la risposta è bloccata o diversa
+            if "candidates" in data and len(data["candidates"]) > 0:
+                candidate = data["candidates"][0]
+                if "content" in candidate and "parts" in candidate["content"]:
+                    return candidate["content"]["parts"][0]["text"]
+            
+            # Se Google restituisce un errore interno o un blocco di sicurezza
+            if "error" in data:
+                return f"Errore restituito da Google: {data['error'].get('message', 'Sconosciuto')}"
+                
+            return "Impossibile elaborare la risposta dall'intelligenza artificiale. Riprova."
         except Exception as e:
-            return f"Errore durante l'analisi con l'intelligenza artificiale: {str(e)}"
+            return f"Errore di connessione con l'IA: {str(e)}"
 
 # 1. Pagina principale del sito web
 @app.get("/", response_class=HTMLResponse)
@@ -313,7 +324,7 @@ async def analyze_api(text: str = Form(None), file: UploadFile = File(None)):
     try:
         content_to_analyze = text or ""
         if file:
-            content_to_analyze += " [L'utente ha caricato uno screenshot allegato]"
+            content_to_analyze += " [L'utente ha caricato uno screenshot o un'immagine nel sito]"
 
         prompt = (
             "Sei un assistente esperto di cybersecurity e antitruffa. Analizza il seguente contenuto "
@@ -355,7 +366,7 @@ async def process_telegram_update(request: Request):
         print("Errore Telegram:", e)
     return {"status": "OK"}
 
-# 3. Webhook Telegram (Copre sia /telegram che /telegram-webhook per evitare errori 404)
+# 3. Webhook Telegram
 @app.post("/telegram")
 async def telegram_webhook_short(request: Request):
     return await process_telegram_update(request)
