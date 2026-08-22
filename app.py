@@ -1,13 +1,21 @@
-from fastapi import FastAPI, Request, Response
+import os
+from fastapi import FastAPI, Request, Response, UploadFile, File, Form
 from fastapi.responses import HTMLResponse
 import uvicorn
+import google.generativeai as genai
 
 app = FastAPI()
+
+# Configurazione dell'API Key di Gemini (prende la chiave dalle variabili d'ambiente di Render)
+# Assicurati di aver impostato GEMINI_API_KEY nelle impostazioni d'ambiente del tuo servizio su Render.
+api_key = os.environ.get("GEMINI_API_KEY", "")
+if api_key:
+    genai.configure(api_key=api_key)
 
 # Token segreto per la verifica di Meta (WhatsApp)
 VERIFY_TOKEN = "antiscam_token_segreto_123"
 
-# 1. Pagina principale grafica (Tema Chiaro, Accattivante e Illustrazione Personalizzata)
+# 1. Pagina principale grafica (Tema Chiaro, Accattivante e Interattivo)
 @app.get("/", response_class=HTMLResponse)
 def read_root():
     html_content = """
@@ -56,11 +64,10 @@ def read_root():
                 margin-bottom: 25px;
                 text-align: center;
             }
-            /* Icona Mostriciattolo Pescatore Personalizzata */
             .logo-container {
                 width: 90px;
                 height: 90px;
-                background: linear-gradient(1355deg, #e0f2fe 0%, #bae6fd 100%);
+                background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
@@ -147,7 +154,7 @@ def read_root():
                 font-weight: bold;
                 font-size: 16px;
                 cursor: pointer;
-                transition: background-color 0.2s, transform 0.1s;
+                transition: background-color 0.2s;
                 box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
             }
             button.action-btn:hover {
@@ -172,6 +179,19 @@ def read_root():
                 background-color: var(--success-text);
                 border-radius: 50%;
                 display: inline-block;
+            }
+            /* Risultato dell'analisi */
+            #resultBox {
+                margin-top: 20px;
+                padding: 15px;
+                border-radius: 10px;
+                background-color: #f1f5f9;
+                text-align: left;
+                display: none;
+                font-size: 14px;
+                line-height: 1.5;
+                border: 1px solid var(--border);
+                white-space: pre-wrap;
             }
             /* Bacheca delle truffe */
             .board-title {
@@ -214,7 +234,6 @@ def read_root():
                     <span class="dot"></span> Sistema Operativo e Online
                 </div>
                 
-                <!-- Icona Mostriciattolo Pescatore (Ispirata al concept pulito) -->
                 <div class="logo-container">
                     <svg viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
@@ -232,12 +251,14 @@ def read_root():
                 <div class="input-group">
                     <label>Oppure carica uno screenshot (Riconoscimento OCR):</label>
                     <div class="file-upload" onclick="document.getElementById('screenshotFile').click()">
-                        <label for="screenshotFile">📷 Clicca qui per selezionare un'immagine o uno screenshot</label>
-                        <input type="file" id="screenshotFile" accept="image/*">
+                        <label id="fileLabel" for="screenshotFile">📷 Clicca qui per selezionare un'immagine o uno screenshot</label>
+                        <input type="file" id="screenshotFile" accept="image/*" onchange="updateFileName()">
                     </div>
                 </div>
                 
-                <button class="action-btn" onclick="alert('Funzione di analisi (Testo + OCR) pronta!')">Analizza Contenuto</button>
+                <button class="action-btn" onclick="analyzeContent()">Analizza Contenuto</button>
+                
+                <div id="resultBox"></div>
             </div>
 
             <!-- Bacheca Ultime Truffe -->
@@ -260,12 +281,92 @@ def read_root():
                 </div>
             </div>
         </div>
+
+        <script>
+            function updateFileName() {
+                const input = document.getElementById('screenshotFile');
+                const label = document.getElementById('fileLabel');
+                if (input.files && input.files[0]) {
+                    label.textContent = "📎 Selezionato: " + input.files[0].name;
+                }
+            }
+
+            async function analyzeContent() {
+                const text = document.getElementById('scamText').value;
+                const fileInput = document.getElementById('screenshotFile');
+                const resultBox = document.getElementById('resultBox');
+
+                if (!text && (!fileInput.files || fileInput.files.length === 0)) {
+                    alert("Inserisci un testo o carica uno screenshot da analizzare.");
+                    return;
+                }
+
+                resultBox.style.display = "block";
+                resultBox.textContent = "Analisi in corso con l'intelligenza artificiale...";
+
+                const formData = new FormData();
+                formData.append("text", text);
+                if (fileInput.files[0]) {
+                    formData.append("file", fileInput.files[0]);
+                }
+
+                try {
+                    const response = await fetch('/api/analyze', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        resultBox.textContent = data.result;
+                    } else {
+                        resultBox.textContent = "Errore durante l'analisi: " + (data.error || "Riprova più tardi.");
+                    }
+                } catch (err) {
+                    resultBox.textContent = "Errore di connessione al server.";
+                }
+            }
+        </script>
     </body>
     </html>
     """
     return html_content
 
-# 2. Webhook WhatsApp (GET per la verifica di Meta)
+# 2. API di Analisi reale con Intelligenza Artificiale (Gemini)
+@app.post("/api/analyze")
+async def analyze_api(text: str = Form(None), file: UploadFile = File(None)):
+    try:
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        
+        prompt = (
+            "Sei un assistente esperto di cybersecurity e antitruffa. Analizza il seguente contenuto "
+            "(che può essere un SMS, un messaggio social, un'email o il testo estratto da uno screenshot) "
+            "e dimmi chiaramente se si tratta di una truffa, phishing o un tentativo di plagio/frode. "
+            "Struttura la risposta in modo semplice e diretto per un utente comune: "
+            "1. **Verdetto** (Sicuro / Sospetto / TRUFFA ACCERTATA) "
+            "2. **Perché** (Spiega in 2 righe il pericolo) "
+            "3. **Cosa fare** (Un consiglio pratico immediato)."
+        )
+
+        contents = [prompt]
+
+        if text:
+            contents.append(f"Testo del messaggio: {text}")
+
+        if file:
+            image_bytes = await file.read()
+            image_part = {
+                "mime_type": file.content_type,
+                "data": image_bytes
+            }
+            contents.append(image_part)
+
+        response = model.generate_content(contents)
+        return {"success": True, "result": response.text}
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+# 3. Webhook WhatsApp (GET per la verifica di Meta)
 @app.get("/webhook")
 async def verify_whatsapp(request: Request):
     mode = request.query_params.get("hub.mode")
@@ -279,14 +380,14 @@ async def verify_whatsapp(request: Request):
             return Response(content="Token non valido", status_code=403)
     return Response(content="Parametri mancanti", status_code=400)
 
-# 3. Webhook WhatsApp (POST per ricevere i messaggi)
+# 4. Webhook WhatsApp (POST per ricevere i messaggi)
 @app.post("/webhook")
 async def receive_whatsapp(request: Request):
     body = await request.json()
     print("Messaggio WhatsApp ricevuto:", body)
     return {"status": "EVENT_RECEIVED"}
 
-# 4. Webhook Telegram (POST per ricevere i messaggi dal bot Telegram)
+# 5. Webhook Telegram (POST per ricevere i messaggi dal bot Telegram)
 @app.post("/telegram-webhook")
 async def receive_telegram(request: Request):
     body = await request.json()
