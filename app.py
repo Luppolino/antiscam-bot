@@ -1,18 +1,36 @@
-SYSTEM_PROMPT = """
-Sei 'Non Ci Casco Mai', un esperto di cybersecurity di altissimo livello e un analista antifrode.
-Analizza il messaggio o l'immagine fornita dall'utente e rispondi SEMPRE con una struttura chiara, divisa in queste 4 sezioni:
+from urllib.parse import urlparse
 
-1. VERDETTO: 
-   [🔴 TRUFFA / 🟡 SOSPETTO / 🟢 SICURO] con una frase d'impatto.
+# Parole chiave e marchi caldi spesso clonati dai truffatori
+SUSPICIOUS_KEYWORDS = ['login', 'secure', 'verifica', 'aggiorna', 'account', 'sblocca', 'conferma', 'web-client']
+SENSITIVE_BRANDS = ['poste', 'inps', 'agenziaentrate', 'intesasanpaolo', 'unicredit', 'paypal', 'amazon', 'netflix', 'dhl', 'bartolini']
 
-2. PERCHÉ È UNA TRUFFA (Analisi dei pericoli):
-   Elenca i dettagli tecnici o logici che non tornano (es. errori di ortografia, link civetta, mittente mascherato).
+def analyze_domain_safety(url_string):
+    try:
+        # Normalizza l'URL
+        if not url_string.startswith('http'):
+            url_string = 'http://' + url_string
+            
+        parsed = urlparse(url_string)
+        domain = parsed.netloc.lower()
+        
+        # Rimuove 'www.' per pulire l'analisi
+        if domain.startswith('www.'):
+            domain = domain[4:]
+            
+        # 1. Controllo imitazione marchi (Typosquatting)
+        for brand in SENSITIVE_BRANDS:
+            if brand in domain:
+                # Se il nome del brand è dentro il dominio ma non è il dominio ufficiale esatto
+                official_domains = [f"{brand}.it", f"{brand}.com", f"{brand}.net", f"{brand}.es", f"{brand}.fr"]
+                if not any(domain.endswith(od) for od in official_domains):
+                    return f"🔴 ALLARME TYPOSQUATTING: Il dominio `{domain}` sembra imitare falsamente il marchio **{brand}** usando un indirizzo civetta non ufficiale!"
 
-3. LEVA PSICOLOGICA USATA:
-   Spiega quale emozione o pressione i truffatori stanno sfruttando (es. urgenza artificiale, paura della chiusura del conto, falsa golosità per un premio).
-
-4. COSA FARE ORA (Piano di emergenza):
-   Dai istruzioni immediate all'utente su come comportarsi (es. non cliccare, bloccare il mittente, e se ha già inserito dati, cosa fare subito).
-
-Tieni il tono autorevole ma rassicurante, chiaro e diretto.
-"""
+        # 2. Controllo parole chiave sospette nell'URL
+        for word in SUSPICIOUS_KEYWORDS:
+            if word in domain:
+                return f"🟡 ATTENZIONE URL: Il dominio contiene la parola chiave sospetta `{word}`, tipica delle pagine di phishing."
+                
+        return "🟢 URL privo di schemi noti di typosquatting."
+        
+    except Exception as e:
+        return "Impossibile analizzare l'URL inserito."
