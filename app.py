@@ -11,12 +11,12 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
 VERIFY_TOKEN = "antiscam_token_segreto_123"
 
-# Funzione blindata per interrogare Gemini via HTTP
+# Funzione blindata per interrogare Gemini via HTTP con il modello corretto gemini-3.6-flash
 async def ask_gemini(prompt_text: str):
     if not GEMINI_API_KEY:
         return "Errore: API Key di Gemini non configurata su Render."
     
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={GEMINI_API_KEY}"
     payload = {
         "contents": [{"parts": [{"text": prompt_text}]}]
     }
@@ -26,13 +26,11 @@ async def ask_gemini(prompt_text: str):
             response = await client.post(url, json=payload, timeout=25.0)
             data = response.json()
             
-            # Controllo di sicurezza per evitare errori se la risposta è bloccata o diversa
             if "candidates" in data and len(data["candidates"]) > 0:
                 candidate = data["candidates"][0]
                 if "content" in candidate and "parts" in candidate["content"]:
                     return candidate["content"]["parts"][0]["text"]
             
-            # Se Google restituisce un errore interno o un blocco di sicurezza
             if "error" in data:
                 return f"Errore restituito da Google: {data['error'].get('message', 'Sconosciuto')}"
                 
