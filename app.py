@@ -1,4 +1,5 @@
 import os
+import base64
 import httpx
 from fastapi import FastAPI, Request, Response, UploadFile, File, Form
 from fastapi.responses import HTMLResponse
@@ -11,19 +12,30 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
 VERIFY_TOKEN = "antiscam_token_segreto_123"
 
-# Funzione blindata per interrogare Gemini via HTTP con il modello corretto gemini-3.6-flash
-async def ask_gemini(prompt_text: str):
+# Funzione blindata per interrogare Gemini via HTTP supportando sia testo che immagini (Base64)
+async def ask_gemini(prompt_text: str, image_bytes: bytes = None, mime_type: str = "image/jpeg"):
     if not GEMINI_API_KEY:
         return "Errore: API Key di Gemini non configurata su Render."
     
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={GEMINI_API_KEY}"
+    
+    parts = [{"text": prompt_text}]
+    if image_bytes:
+        encoded_image = base64.b64encode(image_bytes).decode("utf-8")
+        parts.append({
+            "inline_data": {
+                "mime_type": mime_type,
+                "data": encoded_image
+            }
+        })
+        
     payload = {
-        "contents": [{"parts": [{"text": prompt_text}]}]
+        "contents": [{"parts": parts}]
     }
     
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.post(url, json=payload, timeout=25.0)
+            response = await client.post(url, json=payload, timeout=35.0)
             data = response.json()
             
             if "candidates" in data and len(data["candidates"]) > 0:
@@ -316,44 +328,65 @@ def read_root():
     </html>
     """
 
-# 2. API di Analisi per il sito web
+# 2. API di Analisi per il sito web con supporto immagini
 @app.post("/api/analyze")
 async def analyze_api(text: str = Form(None), file: UploadFile = File(None)):
     try:
-        content_to_analyze = text or ""
+        content_text = text or "Analizza questo screenshot per individuare eventuali tentativi di truffa o phishing."
+        
+        image_bytes = None
+        mime_type = "image/jpeg"
         if file:
-            content_to_analyze += " [L'utente ha caricato uno screenshot o un'immagine nel sito]"
+            image_bytes = await file.read()
+            mime_type = file.content_type or "image/jpeg"
 
         prompt = (
-            "Sei un assistente esperto di cybersecurity e antitruffa. Analizza il seguente contenuto "
-            f"e dimmi chiaramente se si tratta di truffa o phishing: '{content_to_analyze}'. "
-            "Struttura la risposta in 3 punti: 1. Verdetto, 2. Perché, 3. Cosa fare."
+            "Sei un assistente esperto di cybersecurity e antitruffa. Analizza attentamente il contenuto "
+            f"fornito (testo o immagine allegata): '{content_text}' e dimmi chiaramente se si tratta di truffa o phishing. "
+            "Struttura la risposta in 3 punti: 1. Verdetto (Sicuro / Sospetto / TRUFFA ACCERTATA), 2. Perché, 3. Cosa fare."
         )
 
-        result_text = await ask_gemini(prompt)
+        result_text = await ask_gemini(prompt, image_bytes=image_bytes, mime_type=mime_type)
         return {"success": True, "result": result_text}
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-# Funzione comune per gestire i messaggi di Telegram
+# Funzione per gestire i messaggi e le foto di Telegram
 async def process_telegram_update(request: Request):
     try:
         body = await request.json()
         message = body.get("message", {})
         chat_id = message.get("chat", {}).get("id")
-        text = message.get("text")
+        text = message.get("text") or message.get("caption") or "Analizza questo screenshot per individuare eventuali truffe."
+        photos = message.get("photo")
 
-        if chat_id and text and TELEGRAM_TOKEN:
+        if chat_id and TELEGRAM_TOKEN:
+            image_bytes = None
+            mime_type = "image/jpeg"
+            
+            # Se l'utente ha inviato una foto su Telegram, la scarichiamo
+            if photos and len(photos) > 0:
+                file_id = photos[-1].get("file_id")
+                async with httpx.AsyncClient() as client:
+                    file_info_resp = await client.get(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getFile?file_id={file_id}")
+                    file_info_data = file_info_resp.json()
+                    if file_info_data.get("ok"):
+                        file_path = file_info_data["result"]["file_path"]
+                        file_url = f"https://api.telegram.org/file/bot{TELEGRAM_TOKEN}/{file_path}"
+                        file_resp = await client.get(file_url)
+                        if file_resp.status_code == 200:
+                            image_bytes = file_resp.content
+
             prompt = (
                 "Sei NonCiCascoMai, un bot assistente esperto di cybersecurity e antitruffa. "
-                "Analizza questo messaggio inviato da un utente su Telegram e rispondi in modo chiaro: "
+                "Analizza questo messaggio o screenshot inviato dall'utente su Telegram e rispondi in modo chiaro: "
                 "1. Verdetto (Sicuro / Sospetto / TRUFFA ACCERTATA) "
                 "2. Perché "
                 "3. Cosa fare. "
-                f"Messaggio: {text}"
+                f"Testo/Dettagli: {text}"
             )
             
-            reply_text = await ask_gemini(prompt)
+            reply_text = await ask_gemini(prompt, image_bytes=image_bytes, mime_type=mime_type)
             
             async with httpx.AsyncClient() as http_client:
                 await http_client.post(
