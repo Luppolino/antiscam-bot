@@ -382,7 +382,7 @@ async def receive_whatsapp(request: Request):
     body = await request.json()
     return {"status": "EVENT_RECEIVED"}
 
-# 4. Webhook Telegram (Attivo e collegato a Gemini)
+# 4. Webhook Telegram (Gestito in sicurezza)
 @app.post("/telegram-webhook")
 async def receive_telegram(request: Request):
     try:
@@ -392,7 +392,6 @@ async def receive_telegram(request: Request):
         text = message.get("text")
 
         if chat_id and text and client:
-            # Invia il messaggio ricevuto al modello Gemini per l'analisi anti-truffa
             prompt = (
                 "Sei NonCiCascoMai, un bot assistente esperto di cybersecurity e antitruffa. "
                 "Analizza questo messaggio inviato da un utente su Telegram e rispondi in modo chiaro: "
@@ -407,7 +406,6 @@ async def receive_telegram(request: Request):
             )
             reply_text = response.text
 
-            # Invia la risposta indietro all'utente su Telegram
             if TELEGRAM_TOKEN:
                 url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
                 async with httpx.AsyncClient() as http_client:
