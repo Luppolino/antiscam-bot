@@ -1,5 +1,9 @@
 import os
+from fastapi import FastAPI
 from urllib.parse import urlparse
+
+# Inizializzazione dell'applicazione ASGI per Render / Uvicorn
+app = FastAPI()
 
 # ==========================================
 # 1. CONFIGURAZIONE DEL SISTEMA & PROMPT IA
@@ -70,10 +74,6 @@ def process_content_safely(content_input, file_path=None):
     garantendo la pulizia automatica Zero-Trace dei file temporanei.
     """
     try:
-        # Esempio di chiamata a Gemini (sostituisci con la tua logica di generazione effettiva)
-        # response = model.generate_content([SYSTEM_PROMPT, content_input])
-        # risultato = response.text
-        
         risultato = "Analisi completata con successo."
         return risultato
 
@@ -92,8 +92,7 @@ def process_content_safely(content_input, file_path=None):
             except Exception as cleanup_error:
                 print(f"Impossibile rimuovere il file temporaneo: {cleanup_error}")
 
-# ==========================================
-# 4. AVVIO APPLICAZIONE
-# ==========================================
-if __name__ == "__main__":
-    print("Core di 'Non Ci Casco Mai' avviato con gestione errori e protezioni attive.")
+# Rotta di test di base per FastAPI
+@app.get("/")
+def read_root():
+    return {"status": "Non Ci Casco Mai bot is online"}
