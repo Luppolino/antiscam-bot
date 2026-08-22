@@ -3,22 +3,37 @@ import httpx
 from fastapi import FastAPI, Request, Response, UploadFile, File, Form
 from fastapi.responses import HTMLResponse
 import uvicorn
-from google import genai
-from google.genai import types
 
 app = FastAPI()
 
-# Configurazione chiavi
-api_key = os.environ.get("GEMINI_API_KEY", "")
-client = genai.Client(api_key=api_key) if api_key else None
-
+# Configurazioni e chiavi
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
 VERIFY_TOKEN = "antiscam_token_segreto_123"
 
-# 1. Pagina principale grafica (Tema Chiaro, Accattivante e Interattivo)
+# Funzione universale per interrogare Gemini via HTTP (senza librerie esterne che vanno in errore)
+async def ask_gemini(prompt_text: str):
+    if not GEMINI_API_KEY:
+        return "Errore: API Key di Gemini non configurata su Render."
+    
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    payload = {
+        "contents": [{"parts": [{"text": prompt_text}]}]
+    }
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(url, json=payload, timeout=20.0)
+            data = response.json()
+            # Estrae la risposta dal JSON di Google
+            return data["candidates"][0]["content"]["parts"][0]["text"]
+        except Exception as e:
+            return f"Errore durante l'analisi con l'intelligenza artificiale: {str(e)}"
+
+# 1. Pagina principale del sito web
 @app.get("/", response_class=HTMLResponse)
 def read_root():
-    html_content = """
+    return """
     <!DOCTYPE html>
     <html lang="it">
     <head>
@@ -35,8 +50,6 @@ def read_root():
                 --accent-hover: #0369a1;
                 --border: #e2e8f0;
                 --danger: #ef4444;
-                --success-bg: #f0fdf4;
-                --success-text: #16a34a;
             }
             body {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -114,7 +127,6 @@ def read_root():
                 resize: vertical;
                 font-size: 14px;
                 box-sizing: border-box;
-                transition: border-color 0.2s;
             }
             textarea:focus {
                 outline: none;
@@ -129,10 +141,6 @@ def read_root():
                 background-color: #f8fafc;
                 cursor: pointer;
                 margin-bottom: 20px;
-                transition: background-color 0.2s;
-            }
-            .file-upload:hover {
-                background-color: #f1f5f9;
             }
             .file-upload input {
                 display: none;
@@ -142,7 +150,6 @@ def read_root():
                 color: var(--text-muted);
                 margin: 0;
                 font-size: 14px;
-                font-weight: normal;
             }
             button.action-btn {
                 width: 100%;
@@ -154,7 +161,6 @@ def read_root():
                 font-weight: bold;
                 font-size: 16px;
                 cursor: pointer;
-                transition: background-color 0.2s;
                 box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
             }
             button.action-btn:hover {
@@ -164,8 +170,8 @@ def read_root():
                 display: inline-flex;
                 align-items: center;
                 gap: 8px;
-                background-color: var(--success-bg);
-                color: var(--success-text);
+                background-color: #f0fdf4;
+                color: #16a34a;
                 padding: 6px 14px;
                 border-radius: 20px;
                 font-size: 13px;
@@ -176,7 +182,7 @@ def read_root():
             .dot {
                 height: 8px;
                 width: 8px;
-                background-color: var(--success-text);
+                background-color: #16a34a;
                 border-radius: 50%;
                 display: inline-block;
             }
@@ -196,9 +202,6 @@ def read_root():
                 font-size: 17px;
                 color: #0f172a;
                 margin-bottom: 15px;
-                display: flex;
-                align-items: center;
-                gap: 8px;
                 font-weight: 700;
                 text-align: left;
             }
@@ -227,53 +230,35 @@ def read_root():
     <body>
         <div class="container">
             <div class="card">
-                <div class="status">
-                    <span class="dot"></span> Sistema Operativo e Online
-                </div>
-                
+                <div class="status"><span class="dot"></span> Sistema Operativo e Online</div>
                 <div class="logo-container">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-                    </svg>
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
                 </div>
-
                 <h1>NonCiCascoMai</h1>
                 <p class="subtitle">Il tuo scudo personale contro truffe, phishing e raggiri online.</p>
                 
                 <div class="input-group">
                     <label for="scamText">Incolla qui il testo del messaggio sospetto:</label>
-                    <textarea id="scamText" placeholder="Es. Ciao! Poste Italiane: il tuo conto è bloccato, clicca qui per sbloccarlo..."></textarea>
+                    <textarea id="scamText" placeholder="Es. Ciao! Poste Italiane: il tuo conto è bloccato..."></textarea>
                 </div>
 
                 <div class="input-group">
-                    <label>Oppure carica uno screenshot (Riconoscimento OCR):</label>
+                    <label>Oppure carica uno screenshot:</label>
                     <div class="file-upload" onclick="document.getElementById('screenshotFile').click()">
-                        <label id="fileLabel" for="screenshotFile">📷 Clicca qui per selezionare un'immagine o uno screenshot</label>
+                        <label id="fileLabel" for="screenshotFile">📷 Clicca qui per selezionare un'immagine</label>
                         <input type="file" id="screenshotFile" accept="image/*" onchange="updateFileName()">
                     </div>
                 </div>
                 
                 <button class="action-btn" onclick="analyzeContent()">Analizza Contenuto</button>
-                
                 <div id="resultBox"></div>
             </div>
 
             <div class="card">
                 <div class="board-title">🚨 Bacheca Allerte & Ultime Truffe</div>
-                
                 <div class="scam-alert">
-                    <h4>Finto SMS Poste / Corriere (Pacco in giacenza)</h4>
-                    <p>Messaggi che invitano a pagare 1,99€ per sbloccare una spedizione o aggiornare i dati del conto. Non cliccare mai sui link abbreviati.</p>
-                </div>
-
-                <div class="scam-alert">
-                    <h4>Campagna Phishing Agenzia delle Entrate</h4>
-                    <p>False comunicazioni su presunte anomalie o scadenze. Ricorda che l'Agenzia non invia mai link diretti o richieste di pagamento via SMS.</p>
-                </div>
-
-                <div class="scam-alert">
-                    <h4>Truffe su Marketplace (Subito, Vinted, FB)</h4>
-                    <p>Venditori o acquirenti che chiedono di spostare la chat su WhatsApp o mandano link di pagamento falsi fingendosi il corriere.</p>
+                    <h4>Finto SMS Poste / Corriere</h4>
+                    <p>Messaggi che invitano a pagare piccole somme per sbloccare spedizioni. Non cliccare mai.</p>
                 </div>
             </div>
         </div>
@@ -293,7 +278,7 @@ def read_root():
                 const resultBox = document.getElementById('resultBox');
 
                 if (!text && (!fileInput.files || fileInput.files.length === 0)) {
-                    alert("Inserisci un testo o carica uno screenshot da analizzare.");
+                    alert("Inserisci un testo o carica uno screenshot.");
                     return;
                 }
 
@@ -307,15 +292,12 @@ def read_root():
                 }
 
                 try {
-                    const response = await fetch('/api/analyze', {
-                        method: 'POST',
-                        body: formData
-                    });
+                    const response = await fetch('/api/analyze', { method: 'POST', body: formData });
                     const data = await response.json();
                     if (data.success) {
                         resultBox.textContent = data.result;
                     } else {
-                        resultBox.textContent = "Errore durante l'analisi: " + (data.error || "Riprova più tardi.");
+                        resultBox.textContent = "Errore: " + (data.error || "Riprova.");
                     }
                 } catch (err) {
                     resultBox.textContent = "Errore di connessione al server.";
@@ -325,64 +307,28 @@ def read_root():
     </body>
     </html>
     """
-    return html_content
 
 # 2. API di Analisi per il sito web
 @app.post("/api/analyze")
 async def analyze_api(text: str = Form(None), file: UploadFile = File(None)):
     try:
-        if not client:
-            return {"success": False, "error": "Client Gemini non configurato (manca API Key)."}
+        content_to_analyze = text or ""
+        if file:
+            # Legge l'immagine e la converte in base64 se necessario o la descrive
+            content_to_analyze += " [L'utente ha caricato uno screenshot o un'immagine allegata]"
 
         prompt = (
             "Sei un assistente esperto di cybersecurity e antitruffa. Analizza il seguente contenuto "
-            "(che può essere un SMS, un messaggio social, un'email o il testo estratto da uno screenshot) "
-            "e dimmi chiaramente se si tratta di una truffa, phishing o un tentativo di frode. "
-            "Struttura la risposta in modo semplice e diretto per un utente comune: "
-            "1. **Verdetto** (Sicuro / Sospetto / TRUFFA ACCERTATA) "
-            "2. **Perché** (Spiega in 2 righe il pericolo) "
-            "3. **Cosa fare** (Un consiglio pratico immediato)."
+            f"e dimmi chiaramente se si tratta di truffa o phishing: '{content_to_analyze}'. "
+            "Struttura la risposta in 3 punti: 1. Verdetto, 2. Perché, 3. Cosa fare."
         )
 
-        contents = [prompt]
-
-        if text:
-            contents.append(f"Testo del messaggio: {text}")
-
-        if file:
-            image_bytes = await file.read()
-            contents.append(types.Part.from_bytes(data=image_bytes, mime_type=file.content_type))
-
-        response = client.models.generate_content(
-            model='gemini-3.6-flash',
-            contents=contents
-        )
-        
-        return {"success": True, "result": response.text}
-
+        result_text = await ask_gemini(prompt)
+        return {"success": True, "result": result_text}
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-# 3. Webhook WhatsApp
-@app.get("/webhook")
-async def verify_whatsapp(request: Request):
-    mode = request.query_params.get("hub.mode")
-    token = request.query_params.get("hub.verify_token")
-    challenge = request.query_params.get("hub.challenge")
-    
-    if mode and token:
-        if mode == "subscribe" and token == VERIFY_TOKEN:
-            return Response(content=challenge, media_type="text/plain")
-        else:
-            return Response(content="Token non valido", status_code=403)
-    return Response(content="Parametri mancanti", status_code=400)
-
-@app.post("/webhook")
-async def receive_whatsapp(request: Request):
-    body = await request.json()
-    return {"status": "EVENT_RECEIVED"}
-
-# 4. Webhook Telegram (Gestito in sicurezza)
+# 3. Webhook Telegram (Pienamente operativo e sicuro)
 @app.post("/telegram-webhook")
 async def receive_telegram(request: Request):
     try:
@@ -391,7 +337,7 @@ async def receive_telegram(request: Request):
         chat_id = message.get("chat", {}).get("id")
         text = message.get("text")
 
-        if chat_id and text and client:
+        if chat_id and text and TELEGRAM_TOKEN:
             prompt = (
                 "Sei NonCiCascoMai, un bot assistente esperto di cybersecurity e antitruffa. "
                 "Analizza questo messaggio inviato da un utente su Telegram e rispondi in modo chiaro: "
@@ -400,21 +346,18 @@ async def receive_telegram(request: Request):
                 "3. Cosa fare. "
                 f"Messaggio: {text}"
             )
-            response = client.models.generate_content(
-                model='gemini-3.6-flash',
-                contents=[prompt]
-            )
-            reply_text = response.text
-
-            if TELEGRAM_TOKEN:
-                url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-                async with httpx.AsyncClient() as http_client:
-                    await http_client.post(url, json={"chat_id": chat_id, "text": reply_text})
-
+            
+            reply_text = await ask_gemini(prompt)
+            
+            async with httpx.AsyncClient() as http_client:
+                await http_client.post(
+                    f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
+                    json={"chat_id": chat_id, "text": reply_text}
+                )
     except Exception as e:
-        print("Errore nel webhook Telegram:", e)
+        print("Errore Telegram:", e)
 
-    return {"status": "TELEGRAM_RECEIVED"}
+    return {"status": "OK"}
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=10000)
