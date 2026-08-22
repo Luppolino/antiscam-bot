@@ -7,7 +7,6 @@ import google.generativeai as genai
 app = FastAPI()
 
 # Configurazione dell'API Key di Gemini (prende la chiave dalle variabili d'ambiente di Render)
-# Assicurati di aver impostato GEMINI_API_KEY nelle impostazioni d'ambiente del tuo servizio su Render.
 api_key = os.environ.get("GEMINI_API_KEY", "")
 if api_key:
     genai.configure(api_key=api_key)
@@ -331,16 +330,16 @@ def read_root():
     """
     return html_content
 
-# 2. API di Analisi reale con Intelligenza Artificiale (Gemini)
+# 2. API di Analisi reale con Intelligenza Artificiale (Gemini-pro)
 @app.post("/api/analyze")
 async def analyze_api(text: str = Form(None), file: UploadFile = File(None)):
     try:
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-pro")
         
         prompt = (
             "Sei un assistente esperto di cybersecurity e antitruffa. Analizza il seguente contenuto "
             "(che può essere un SMS, un messaggio social, un'email o il testo estratto da uno screenshot) "
-            "e dimmi chiaramente se si tratta di una truffa, phishing o un tentativo di plagio/frode. "
+            "e dimmi chiaramente se si tratta di una truffa, phishing o un tentativo di frode. "
             "Struttura la risposta in modo semplice e diretto per un utente comune: "
             "1. **Verdetto** (Sicuro / Sospetto / TRUFFA ACCERTATA) "
             "2. **Perché** (Spiega in 2 righe il pericolo) "
