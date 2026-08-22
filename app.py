@@ -1,9 +1,13 @@
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from urllib.parse import urlparse
+import requests
 
 # Inizializzazione dell'applicazione ASGI per Render / Uvicorn
 app = FastAPI()
+
+# Recupera il token del bot dalle variabili d'ambiente di Render
+BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 
 # ==========================================
 # 1. CONFIGURAZIONE DEL SISTEMA & PROMPT IA
@@ -92,7 +96,43 @@ def process_content_safely(content_input, file_path=None):
             except Exception as cleanup_error:
                 print(f"Impossibile rimuovere il file temporaneo: {cleanup_error}")
 
-# Rotta di test di base per FastAPI
+# ==========================================
+# 4. ROTTE FASTAPI (WEBHOOK TELEGRAM & ROOT)
+# ==========================================
 @app.get("/")
 def read_root():
     return {"status": "Non Ci Casco Mai bot is online"}
+
+@app.post("/telegram")
+async def telegram_webhook(request: Request):
+    """
+    Riceve i messaggi in arrivo da Telegram ed evita l'errore 404.
+    """
+    try:
+        data = await request.json()
+        
+        if "message" in data:
+            message = data["message"]
+            chat_id = message["chat"]["id"]
+            text = message.get("text", "")
+            
+            # Esempio di risposta preliminare basata sui nostri filtri
+            reply_text = "Analisi in corso..."
+            if text:
+                domain_check = analyze_domain_safety(text)
+                reply_text = f"{domain_check}\n\nAnalisi di sicurezza completata."
+            
+            # Invia la risposta indietro su Telegram se il token è configurato
+            if BOT_TOKEN:
+                tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+                payload = {
+                    "chat_id": chat_id,
+                    "text": reply_text,
+                    "parse_mode": "Markdown"
+                }
+                requests.post(tg_url, json=payload)
+                
+    except Exception as e:
+        print(f"Errore nella gestione del webhook Telegram: {e}")
+        
+    return {"status": "ok"}
