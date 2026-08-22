@@ -11,7 +11,7 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
 VERIFY_TOKEN = "antiscam_token_segreto_123"
 
-# Funzione universale per interrogare Gemini via HTTP (senza librerie esterne che vanno in errore)
+# Funzione universale per interrogare Gemini via HTTP
 async def ask_gemini(prompt_text: str):
     if not GEMINI_API_KEY:
         return "Errore: API Key di Gemini non configurata su Render."
@@ -25,7 +25,6 @@ async def ask_gemini(prompt_text: str):
         try:
             response = await client.post(url, json=payload, timeout=20.0)
             data = response.json()
-            # Estrae la risposta dal JSON di Google
             return data["candidates"][0]["content"]["parts"][0]["text"]
         except Exception as e:
             return f"Errore durante l'analisi con l'intelligenza artificiale: {str(e)}"
@@ -314,8 +313,7 @@ async def analyze_api(text: str = Form(None), file: UploadFile = File(None)):
     try:
         content_to_analyze = text or ""
         if file:
-            # Legge l'immagine e la converte in base64 se necessario o la descrive
-            content_to_analyze += " [L'utente ha caricato uno screenshot o un'immagine allegata]"
+            content_to_analyze += " [L'utente ha caricato uno screenshot allegato]"
 
         prompt = (
             "Sei un assistente esperto di cybersecurity e antitruffa. Analizza il seguente contenuto "
@@ -328,9 +326,8 @@ async def analyze_api(text: str = Form(None), file: UploadFile = File(None)):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-# 3. Webhook Telegram (Pienamente operativo e sicuro)
-@app.post("/telegram-webhook")
-async def receive_telegram(request: Request):
+# Funzione comune per gestire i messaggi di Telegram
+async def process_telegram_update(request: Request):
     try:
         body = await request.json()
         message = body.get("message", {})
@@ -356,8 +353,16 @@ async def receive_telegram(request: Request):
                 )
     except Exception as e:
         print("Errore Telegram:", e)
-
     return {"status": "OK"}
+
+# 3. Webhook Telegram (Copre sia /telegram che /telegram-webhook per evitare errori 404)
+@app.post("/telegram")
+async def telegram_webhook_short(request: Request):
+    return await process_telegram_update(request)
+
+@app.post("/telegram-webhook")
+async def telegram_webhook_long(request: Request):
+    return await process_telegram_update(request)
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=10000)
