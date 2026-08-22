@@ -2,7 +2,8 @@ import os
 import json
 import urllib.request
 import urllib.parse
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Form, File, UploadFile
+from fastapi.responses import HTMLResponse
 from PIL import Image
 import google.generativeai as genai
 
@@ -68,6 +69,49 @@ def analyze_domain_safety(url_string):
     except Exception:
         return ""
 
+# ==========================================
+# 3. MOTORE CENTRALE DI ANALISI (TELEGRAM + WEB)
+# ==========================================
+def perform_core_analysis(text_content=None, file_path=None):
+    try:
+        domain_warning = ""
+        if text_content:
+            domain_warning = analyze_domain_safety(text_content)
+
+        prompt_to_send = SYSTEM_PROMPT
+        if text_content:
+            prompt_to_send += f"\n\nMessaggio o URL fornito dall'utente: {text_content}"
+        if domain_warning:
+            prompt_to_send += f"\n\n[Nota tecnica preventiva: {domain_warning}]"
+
+        if file_path and os.path.exists(file_path):
+            img = Image.open(file_path)
+            content_payload = [prompt_to_send, "Analizza questo screenshot per individuare eventuali truffe o tentativi di phishing.", img]
+        else:
+            content_payload = prompt_to_send
+
+        if GEMINI_API_KEY:
+            response = model.generate_content(content_payload)
+            return response.text
+        else:
+            warning_prefix = f"{domain_warning}\n\n" if domain_warning else ""
+            return warning_prefix + "Analisi completata (chiave Gemini non configurata sul server)."
+
+    except Exception as e:
+        error_msg = str(e)
+        if "high demand" in error_msg or "ResourceExhausted" in error_msg:
+            return "⚠️ I server di Google sono momentaneamente sovraccarichi a causa di un picco di traffico. Riprova tra qualche istante!"
+        return f"Si è verificato un errore durante l'elaborazione: {error_msg}"
+        
+    finally:
+        # CANCELLAZIONE ISTANTANEA OBBLIGATORIA (Zero-Trace)
+        if file_path and os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+                print(f"[PRIVACY ZERO-TRACE] File {file_path} eliminato definitivamente.")
+            except Exception as cleanup_error:
+                print(f"Impossibile rimuovere il file temporaneo: {cleanup_error}")
+
 def send_telegram_message(chat_id, text):
     if not BOT_TOKEN:
         return
@@ -81,12 +125,86 @@ def send_telegram_message(chat_id, text):
         print(f"Errore invio messaggio Telegram: {e}")
 
 # ==========================================
-# 3. ROTTE FASTAPI (WEBHOOK TELEGRAM & ROOT)
+# 4. INTERFACCIA WEB (SITO UFFICIALE)
 # ==========================================
-@app.get("/")
-def read_root():
-    return {"status": "Non Ci Casco Mai bot is online"}
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Non Ci Casco Mai - Analizzatore Antifrode</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f7f6; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { max-width: 600px; width: 100%; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h1 { color: #1a365d; font-size: 24px; text-align: center; margin-bottom: 5px; }
+        p.subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 25px; }
+        label { font-weight: bold; display: block; margin-bottom: 8px; color: #2d3748; }
+        textarea, input[type="file"] { width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; margin-bottom: 20px; font-size: 14px; box-sizing: border-box; }
+        textarea { height: 100px; resize: vertical; }
+        button { background: #3182ce; color: white; border: none; padding: 12px 20px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        button:hover { background: #2b6cb0; }
+        .result-box { margin-top: 25px; background: #edf2f7; padding: 20px; border-radius: 8px; white-space: pre-wrap; line-height: 1.5; font-size: 14px; border-left: 5px solid #3182ce; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Non Ci Casco Mai 🛡️</h1>
+        <p class="subtitle">Verifica subito se un messaggio, un link o uno screenshot è una truffa.</p>
+        
+        <form action="/analyze" method="post" enctype="multipart/form-data">
+            <label for="text">Incolla qui il messaggio o il link sospetto:</label>
+            <textarea name="text" placeholder="Es. Il tuo pacco è bloccato, clicca qui..."></textarea>
+            
+            <label for="file">Oppure carica uno screenshot:</label>
+            <input type="file" name="file" accept="image/*">
+            
+            <button type="submit">Analizza con IA</button>
+        </form>
 
+        {% if result %}
+        <div class="result-box">
+            <strong>Risultato dell'analisi:</strong><br><br>
+            {{ result }}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
+"""
+
+@app.get("/", response_class=HTMLResponse)
+def read_root():
+    return HTML_TEMPLATE.replace("{% if result %}", "<!--").replace("{% endif %}", "-->")
+
+@app.post("/analyze", response_class=HTMLResponse)
+async def web_analyze(text: str = Form(None), file: UploadFile = File(None)):
+    temp_file_path = None
+    try:
+        if file and file.filename:
+            temp_file_path = f"/tmp/{file.filename}"
+            with open(temp_file_path, "wb") as buffer:
+                buffer.write(await file.read())
+
+        analysis_result = perform_core_analysis(text_content=text, file_path=temp_file_path)
+
+        # Inserisce il risultato nel template HTML
+        rendered_html = HTML_TEMPLATE.replace(
+            '<div class="result-box" style="display:none">', '<div class="result-box">'
+        ).replace("{{ result }}", analysis_result)
+        
+        # Sblocca la visualizzazione del box dei risultati
+        rendered_html = rendered_html.replace(
+            '<div class="result-box">', '<div class="result-box" style="display:block;">'
+        )
+        return rendered_html
+
+    except Exception as e:
+        return HTML_TEMPLATE.replace("{{ result }}", f"Errore durante l'elaborazione web: {str(e)}")
+
+# ==========================================
+# 5. WEBHOOK TELEGRAM
+# ==========================================
 @app.post("/telegram")
 async def telegram_webhook(request: Request):
     temp_file_path = None
@@ -98,57 +216,31 @@ async def telegram_webhook(request: Request):
         message = data["message"]
         chat_id = message["chat"]["id"]
         
-        # A. GESTIONE TESTO
+        # A. GESTIONE TESTO TELEGRAM
         if "text" in message:
             text = message["text"]
-            domain_warning = analyze_domain_safety(text)
-            
-            prompt_to_send = SYSTEM_PROMPT + f"\n\nMessaggio dell'utente da analizzare: {text}"
-            if domain_warning:
-                prompt_to_send += f"\n\n[Nota tecnica preventiva: {domain_warning}]"
-            
-            if GEMINI_API_KEY:
-                response = model.generate_content(prompt_to_send)
-                reply_text = response.text
-            else:
-                reply_text = f"{domain_warning}\n\nAnalisi completata (chiave Gemini non configurata)."
-                
+            reply_text = perform_core_analysis(text_content=text)
             send_telegram_message(chat_id, reply_text)
 
-        # B. GESTIONE FOTO / SCREENSHOT (con Zero-Trace)
+        # B. GESTIONE FOTO TELEGRAM (con Zero-Trace)
         elif "photo" in message:
             send_telegram_message(chat_id, "Ricevuto! Analisi dello screenshot in corso...")
             photo = message["photo"][-1]
             file_id = photo["file_id"]
             
-            # Scarica il percorso del file da Telegram
             get_file_url = f"https://api.telegram.org/bot{BOT_TOKEN}/getFile?file_id={file_id}"
             with urllib.request.urlopen(get_file_url) as response_file:
                 file_info = json.loads(response_file.read().decode())
                 telegram_file_path = file_info["result"]["file_path"]
             
-            # Scarica l'immagine fisicamente sul server in modo temporaneo
             download_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{telegram_file_path}"
             temp_file_path = f"/tmp/{file_id}.jpg"
             urllib.request.urlretrieve(download_url, temp_file_path)
             
-            try:
-                img = Image.open(temp_file_path)
-                if GEMINI_API_KEY:
-                    response = model.generate_content([SYSTEM_PROMPT, "Analizza questo screenshot per individuare eventuali truffe o tentativi di phishing.", img])
-                    reply_text = response.text
-                else:
-                    reply_text = "Immagine ricevuta, ma chiave Gemini non configurata."
-                send_telegram_message(chat_id, reply_text)
-            except Exception as e:
-                send_telegram_message(chat_id, f"Errore nell'analisi dell'immagine: {str(e)}")
-            finally:
-                # CANCELLAZIONE ISTANTANEA OBBLIGATORIA (Zero-Trace)
-                if temp_file_path and os.path.exists(temp_file_path):
-                    os.remove(temp_file_path)
-                    print(f"[PRIVACY ZERO-TRACE] File {temp_file_path} eliminato definitivamente.")
+            reply_text = perform_core_analysis(file_path=temp_file_path)
+            send_telegram_message(chat_id, reply_text)
 
     except Exception as e:
-        print(f"Errore nel webhook: {e}")
+        print(f"Errore nel webhook Telegram: {e}")
         
     return {"status": "ok"}
