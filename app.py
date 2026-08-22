@@ -2,14 +2,14 @@ import os
 from fastapi import FastAPI, Request, Response, UploadFile, File, Form
 from fastapi.responses import HTMLResponse
 import uvicorn
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 app = FastAPI()
 
-# Configurazione dell'API Key di Gemini (prende la chiave dalle variabili d'ambiente di Render)
+# Inizializzazione del client ufficiale Google GenAI (prende la chiave da GEMINI_API_KEY su Render)
 api_key = os.environ.get("GEMINI_API_KEY", "")
-if api_key:
-    genai.configure(api_key=api_key)
+client = genai.Client(api_key=api_key) if api_key else None
 
 # Token segreto per la verifica di Meta (WhatsApp)
 VERIFY_TOKEN = "antiscam_token_segreto_123"
@@ -330,12 +330,13 @@ def read_root():
     """
     return html_content
 
-# 2. API di Analisi reale con Intelligenza Artificiale (Gemini 1.5 Flash)
+# 2. API di Analisi con il nuovo SDK Google GenAI (gemini-2.5-flash)
 @app.post("/api/analyze")
 async def analyze_api(text: str = Form(None), file: UploadFile = File(None)):
     try:
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        
+        if not client:
+            return {"success": False, "error": "Client Gemini non configurato (manca API Key)."}
+
         prompt = (
             "Sei un assistente esperto di cybersecurity e antitruffa. Analizza il seguente contenuto "
             "(che può essere un SMS, un messaggio social, un'email o il testo estratto da uno screenshot) "
@@ -353,13 +354,13 @@ async def analyze_api(text: str = Form(None), file: UploadFile = File(None)):
 
         if file:
             image_bytes = await file.read()
-            image_part = {
-                "mime_type": file.content_type,
-                "data": image_bytes
-            }
-            contents.append(image_part)
+            contents.append(types.Part.from_bytes(data=image_bytes, mime_type=file.content_type))
 
-        response = model.generate_content(contents)
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=contents
+        )
+        
         return {"success": True, "result": response.text}
 
     except Exception as e:
