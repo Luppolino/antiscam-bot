@@ -62,35 +62,33 @@ def analyze_domain_safety(url_string):
         return "Impossibile analizzare l'URL inserito."
 
 # ==========================================
-# 3. GESTIONE PRIVACY ZERO-TRACE (FILE CLEANUP)
+# 3. GESTIONE PRIVACY ZERO-TRACE & ERRORI API
 # ==========================================
-def process_file_safely(file_path):
+def process_content_safely(content_input, file_path=None):
     """
-    Gestisce l'analisi dell'immagine/screenshot e garantisce la distruzione 
-    istantanea del file temporaneo dai server di Render (Privacy Zero-Trace).
+    Gestisce l'analisi e intercetta eventuali sovraccarichi dei server di Google,
+    garantendo la pulizia automatica Zero-Trace dei file temporanei.
     """
     try:
-        if not os.path.exists(file_path):
-            return "File temporaneo non trovato."
-        
-        # --- [INSERISCI QUI LA TUA LOGICA DI CHIAMATA A GEMINI PER LE IMMAGINI] ---
-        # Esempio:
-        # image = Image.open(file_path)
-        # response = model.generate_content([SYSTEM_PROMPT, image])
+        # Esempio di chiamata a Gemini (sostituisci con la tua logica di generazione effettiva)
+        # response = model.generate_content([SYSTEM_PROMPT, content_input])
         # risultato = response.text
         
-        risultato = "Analisi dello screenshot completata con successo."
+        risultato = "Analisi completata con successo."
         return risultato
 
     except Exception as e:
-        return f"Errore durante l'elaborazione del file: {str(e)}"
+        error_message = str(e)
+        if "high demand" in error_message or "ResourceExhausted" in error_message:
+            return "⚠️ I server di Google sono momentaneamente sovraccarichi a causa di un picco di traffico. Riprova tra qualche istante!"
+        return f"Si è verificato un errore durante l'elaborazione: {error_message}"
         
     finally:
-        # CANCELLAZIONE ISTANTANEA OBBLIGATORIA (Zero-Trace)
-        if os.path.exists(file_path):
+        # CANCELLAZIONE ISTANTANEA OBBLIGATORIA (Zero-Trace) se c'è un file temporaneo
+        if file_path and os.path.exists(file_path):
             try:
                 os.remove(file_path)
-                print(f"[PRIVACY ZERO-TRACE] File {file_path} eliminato definitivamente dai server.")
+                print(f"[PRIVACY ZERO-TRACE] File {file_path} eliminato definitivamente.")
             except Exception as cleanup_error:
                 print(f"Impossibile rimuovere il file temporaneo: {cleanup_error}")
 
@@ -98,4 +96,4 @@ def process_file_safely(file_path):
 # 4. AVVIO APPLICAZIONE
 # ==========================================
 if __name__ == "__main__":
-    print("Core di 'Non Ci Casco Mai' caricato correttamente con tutte le protezioni attive.")
+    print("Core di 'Non Ci Casco Mai' avviato con gestione errori e protezioni attive.")
