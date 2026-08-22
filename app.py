@@ -1,4 +1,5 @@
 import os
+import httpx
 from fastapi import FastAPI, Request, Response, UploadFile, File, Form
 from fastapi.responses import HTMLResponse
 import uvicorn
@@ -7,11 +8,11 @@ from google.genai import types
 
 app = FastAPI()
 
-# Inizializzazione del client ufficiale Google GenAI
+# Configurazione chiavi
 api_key = os.environ.get("GEMINI_API_KEY", "")
 client = genai.Client(api_key=api_key) if api_key else None
 
-# Token segreto per la verifica di Meta (WhatsApp)
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
 VERIFY_TOKEN = "antiscam_token_segreto_123"
 
 # 1. Pagina principale grafica (Tema Chiaro, Accattivante e Interattivo)
@@ -326,7 +327,7 @@ def read_root():
     """
     return html_content
 
-# 2. API di Analisi con il modello aggiornato gemini-3.6-flash
+# 2. API di Analisi per il sito web
 @app.post("/api/analyze")
 async def analyze_api(text: str = Form(None), file: UploadFile = File(None)):
     try:
@@ -381,10 +382,40 @@ async def receive_whatsapp(request: Request):
     body = await request.json()
     return {"status": "EVENT_RECEIVED"}
 
-# 4. Webhook Telegram
+# 4. Webhook Telegram (Attivo e collegato a Gemini)
 @app.post("/telegram-webhook")
 async def receive_telegram(request: Request):
-    body = await request.json()
+    try:
+        body = await request.json()
+        message = body.get("message", {})
+        chat_id = message.get("chat", {}).get("id")
+        text = message.get("text")
+
+        if chat_id and text and client:
+            # Invia il messaggio ricevuto al modello Gemini per l'analisi anti-truffa
+            prompt = (
+                "Sei NonCiCascoMai, un bot assistente esperto di cybersecurity e antitruffa. "
+                "Analizza questo messaggio inviato da un utente su Telegram e rispondi in modo chiaro: "
+                "1. Verdetto (Sicuro / Sospetto / TRUFFA ACCERTATA) "
+                "2. Perché "
+                "3. Cosa fare. "
+                f"Messaggio: {text}"
+            )
+            response = client.models.generate_content(
+                model='gemini-3.6-flash',
+                contents=[prompt]
+            )
+            reply_text = response.text
+
+            # Invia la risposta indietro all'utente su Telegram
+            if TELEGRAM_TOKEN:
+                url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+                async with httpx.AsyncClient() as http_client:
+                    await http_client.post(url, json={"chat_id": chat_id, "text": reply_text})
+
+    except Exception as e:
+        print("Errore nel webhook Telegram:", e)
+
     return {"status": "TELEGRAM_RECEIVED"}
 
 if __name__ == "__main__":
