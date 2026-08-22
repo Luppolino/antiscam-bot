@@ -330,11 +330,11 @@ def read_root():
     """
     return html_content
 
-# 2. API di Analisi reale con Intelligenza Artificiale (Gemini-pro)
+# 2. API di Analisi reale con Intelligenza Artificiale (Gemini 1.5 Flash)
 @app.post("/api/analyze")
 async def analyze_api(text: str = Form(None), file: UploadFile = File(None)):
     try:
-        model = genai.GenerativeModel("gemini-pro")
+        model = genai.GenerativeModel("gemini-1.5-flash")
         
         prompt = (
             "Sei un assistente esperto di cybersecurity e antitruffa. Analizza il seguente contenuto "
