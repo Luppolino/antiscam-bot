@@ -16,8 +16,8 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
-    # Usiamo il modello stabile e ufficiale raccomandato
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    # MODELLO AGGIORNATO E ATTIVO
+    model = genai.GenerativeModel('gemini-2.5-flash')
 
 # ==========================================
 # 1. CONFIGURAZIONE DEL SISTEMA & PROMPT IA
@@ -112,7 +112,7 @@ def perform_core_analysis(text_content=None, file_path=None):
         # CANCELLAZIONE ISTANTANEA OBBLIGATORIA (Zero-Trace)
         if file_path and os.path.exists(file_path):
             try:
-                os.remove(file_path)
+                os.path.remove(file_path)
                 print(f"[PRIVACY ZERO-TRACE] File {file_path} eliminato definitivamente.")
             except Exception as cleanup_error:
                 print(f"Impossibile rimuovere il file temporaneo: {cleanup_error}")
@@ -130,7 +130,7 @@ def send_telegram_message(chat_id, text):
         print(f"Errore invio messaggio Telegram: {e}")
 
 # ==========================================
-# 4. INTERFACCIA WEB (SITO UFFICIALE)
+# 4. INTERFACCIA WEB (SITO UFFICIALE + BACHECA)
 # ==========================================
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -138,10 +138,10 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Non Ci Casco Mai - Analizzatore Antifrode</title>
+    <title>Non Ci Casco Mai - Analizzatore Antifrode & Bacheca Truffe</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f7f6; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { max-width: 600px; width: 100%; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .container { max-width: 700px; width: 100%; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         h1 { color: #1a365d; font-size: 24px; text-align: center; margin-bottom: 5px; }
         p.subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 25px; }
         label { font-weight: bold; display: block; margin-bottom: 8px; color: #2d3748; }
@@ -150,6 +150,13 @@ HTML_TEMPLATE = """
         button { background: #3182ce; color: white; border: none; padding: 12px 20px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
         button:hover { background: #2b6cb0; }
         .result-box { margin-top: 25px; background: #edf2f7; padding: 20px; border-radius: 8px; white-space: pre-wrap; line-height: 1.5; font-size: 14px; border-left: 5px solid #3182ce; display:none; }
+        
+        /* Stile Bacheca Truffe */
+        .board-section { margin-top: 40px; border-top: 2px solid #e2e8f0; padding-top: 25px; }
+        .board-title { font-size: 18px; color: #2d3748; margin-bottom: 15px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .scam-card { background: #fff5f5; border: 1px solid #feb2b2; border-left: 5px solid #e53e3e; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .scam-card h3 { margin: 0 0 5px 0; color: #c53030; font-size: 16px; }
+        .scam-card p { margin: 0; font-size: 13px; color: #4a5568; line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -170,6 +177,26 @@ HTML_TEMPLATE = """
         <div class="result-box" id="resultBox">
             <strong>Risultato dell'analisi:</strong><br><br>
             <span id="resultText">__RESULT_PLACEHOLDER__</span>
+        </div>
+
+        <!-- BACHECA ULTIME TRUFFE SEGNALATE -->
+        <div class="board-section">
+            <div class="board-title">🚨 Bacheca Ultime Truffe Segnalate</div>
+            
+            <div class="scam-card">
+                <h3>🔴 Finto SMS Poste / Corriere</h3>
+                <p>Messaggio con link anomalo (es. <code>poste-sicura-it.com</code>) che avvisa di un pacco bloccato in giacenza per sbloccare il quale vengono chiesti dati bancari.</p>
+            </div>
+            
+            <div class="scam-card">
+                <h3>🟡 Finto rimborso INPS / Agenzia Entrate</h3>
+                <p>Comunicazione urgente via mail o SMS che promette un rimborso fiscale immediato invitando a inserire le credenziali SPID o bancarie su portali civetta.</p>
+            </div>
+
+            <div class="scam-card">
+                <h3>🔴 Phishing Account Netflix / Streaming</h3>
+                <p>Avviso di blocco imminente dell'abbonamento per problemi di pagamento con link diretto a una pagina clone identica all'originale.</p>
+            </div>
         </div>
     </div>
 </body>
