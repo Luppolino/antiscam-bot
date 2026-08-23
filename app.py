@@ -2,15 +2,26 @@ import os
 import json
 import urllib.request
 import urllib.parse
-import base64
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Form, File, UploadFile
 from fastapi.responses import HTMLResponse
+from PIL import Image
+import google.generativeai as genai
 
+# Inizializzazione dell'applicazione FastAPI
 app = FastAPI()
 
+# Recupera le chiavi dalle variabili d'ambiente di Render
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    # Usiamo il modello stabile e ufficiale raccomandato
+    model = genai.GenerativeModel('gemini-1.5-flash')
+
+# ==========================================
+# 1. CONFIGURAZIONE DEL SISTEMA & PROMPT IA
+# ==========================================
 SYSTEM_PROMPT = """
 Sei 'Non Ci Casco Mai', un esperto di cybersecurity di altissimo livello e un analista antifrode.
 Analizza il messaggio o l'immagine fornita dall'utente e rispondi SEMPRE con una struttura chiara, divisa in queste 4 sezioni:
@@ -30,6 +41,9 @@ Analizza il messaggio o l'immagine fornita dall'utente e rispondi SEMPRE con una
 Tieni il tono autorevole ma rassicurante, chiaro e diretto.
 """
 
+# ==========================================
+# 2. FILTRO ANTI-TYPOSQUATTING & DOMINI CIVETTA
+# ==========================================
 SUSPICIOUS_KEYWORDS = ['login', 'secure', 'verifica', 'aggiorna', 'account', 'sblocca', 'conferma', 'web-client']
 SENSITIVE_BRANDS = ['poste', 'inps', 'agenziaentrate', 'intesasanpaolo', 'unicredit', 'paypal', 'amazon', 'netflix', 'dhl', 'bartolini']
 
@@ -56,50 +70,14 @@ def analyze_domain_safety(url_string):
     except Exception:
         return ""
 
-def call_gemini_api_native(prompt, image_path=None):
-    if not GEMINI_API_KEY:
-        return "⚠️ Analisi IA non disponibile: GEMINI_API_KEY non configurata nelle variabili d'ambiente di Render."
-        
-    # AGGIORNATO AL MODELLO CORRETTO E ATTIVO (gemini-2.5-flash)
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
-    parts = [{"text": prompt}]
-    
-    if image_path and os.path.exists(image_path):
-        try:
-            with open(image_path, "rb") as image_file:
-                encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
-            parts.append({
-                "inline_data": {
-                    "mime_type": "image/jpeg",
-                    "data": encoded_string
-                }
-            })
-        except Exception as e:
-            return f"Errore nella lettura dell'immagine: {e}"
-        
-    payload = {"contents": [{"parts": parts}]}
-    data_encoded = json.dumps(payload).encode('utf-8')
-    req = urllib.request.Request(url, data=data_encoded, headers={'Content-Type': 'application/json'})
-    
-    try:
-        with urllib.request.urlopen(req) as response:
-            result = json.loads(response.read().decode())
-            if "candidates" in result and len(result["candidates"]) > 0:
-                return result["candidates"][0]["content"]["parts"][0]["text"]
-            return "⚠️ Risposta vuota ricevuta da Google Gemini."
-    except urllib.error.HTTPError as he:
-        error_body = he.read().decode('utf-8', errors='ignore')
-        print(f"Gemini HTTP Error {he.code}: {error_body}")
-        if he.code == 404:
-            return "⚠️ Errore di connessione (404): Modello non trovato o endpoint non valido."
-        elif he.code == 429:
-            return "⚠️ I server di Google sono momentaneamente sovraccarichi. Riprova tra qualche istante!"
-        return f"⚠️ Errore API Gemini ({he.code}): {he.reason}"
-    except Exception as e:
-        return f"⚠️ Errore di comunicazione con Google Gemini: {str(e)}"
-
+# ==========================================
+# 3. MOTORE CENTRALE DI ANALISI (TELEGRAM + WEB)
+# ==========================================
 def perform_core_analysis(text_content=None, file_path=None):
     try:
+        if not GEMINI_API_KEY:
+            return "⚠️ Analisi IA non disponibile: GEMINI_API_KEY non configurata nelle variabili d'ambiente di Render."
+
         domain_warning = ""
         prompt_to_send = SYSTEM_PROMPT
         
@@ -109,20 +87,29 @@ def perform_core_analysis(text_content=None, file_path=None):
             if domain_warning:
                 prompt_to_send += f"\n\n[Nota tecnica preventiva: {domain_warning}]"
 
-        if file_path:
-            prompt_to_send += "\n\nAnalizza questo screenshot per individuare eventuali truffe o tentativi di phishing."
-
-        response_text = call_gemini_api_native(prompt_to_send, file_path)
+        content_payload = [prompt_to_send]
         
-        if domain_warning and ("⚠️" in response_text or "Errore" in response_text):
+        if file_path and os.path.exists(file_path):
+            img = Image.open(file_path)
+            content_payload.append(img)
+            content_payload.append("Analizza questo screenshot per individuare eventuali truffe o tentativi di phishing.")
+
+        response = model.generate_content(content_payload)
+        response_text = response.text
+
+        if domain_warning and ("Errore" in response_text or "non disponibile" in response_text):
             return f"{domain_warning}\n\n{response_text}"
             
         return response_text
 
     except Exception as e:
-        return f"Si è verificato un errore durante l'elaborazione: {str(e)}"
+        error_msg = str(e)
+        if "429" in error_msg or "ResourceExhausted" in error_msg:
+            return "⚠️ I server di Google sono momentaneamente sovraccarichi a causa di un picco di traffico. Riprova tra qualche istante!"
+        return f"Si è verificato un errore durante l'elaborazione: {error_msg}"
         
     finally:
+        # CANCELLAZIONE ISTANTANEA OBBLIGATORIA (Zero-Trace)
         if file_path and os.path.exists(file_path):
             try:
                 os.remove(file_path)
@@ -132,7 +119,6 @@ def perform_core_analysis(text_content=None, file_path=None):
 
 def send_telegram_message(chat_id, text):
     if not BOT_TOKEN:
-        print("Errore: TELEGRAM_BOT_TOKEN mancante!")
         return
     try:
         tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -143,6 +129,9 @@ def send_telegram_message(chat_id, text):
     except Exception as e:
         print(f"Errore invio messaggio Telegram: {e}")
 
+# ==========================================
+# 4. INTERFACCIA WEB (SITO UFFICIALE)
+# ==========================================
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="it">
@@ -156,7 +145,8 @@ HTML_TEMPLATE = """
         h1 { color: #1a365d; font-size: 24px; text-align: center; margin-bottom: 5px; }
         p.subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 25px; }
         label { font-weight: bold; display: block; margin-bottom: 8px; color: #2d3748; }
-        textarea { width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; margin-bottom: 20px; font-size: 14px; box-sizing: border-box; height: 100px; resize: vertical; }
+        textarea, input[type="file"] { width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; margin-bottom: 20px; font-size: 14px; box-sizing: border-box; }
+        textarea { height: 100px; resize: vertical; }
         button { background: #3182ce; color: white; border: none; padding: 12px 20px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
         button:hover { background: #2b6cb0; }
         .result-box { margin-top: 25px; background: #edf2f7; padding: 20px; border-radius: 8px; white-space: pre-wrap; line-height: 1.5; font-size: 14px; border-left: 5px solid #3182ce; display:none; }
@@ -165,11 +155,14 @@ HTML_TEMPLATE = """
 <body>
     <div class="container">
         <h1>Non Ci Casco Mai 🛡️</h1>
-        <p class="subtitle">Verifica subito se un messaggio o un link è una truffa.</p>
+        <p class="subtitle">Verifica subito se un messaggio, un link o uno screenshot è una truffa.</p>
         
-        <form action="/analyze" method="post">
+        <form action="/analyze" method="post" enctype="multipart/form-data">
             <label for="text">Incolla qui il messaggio o il link sospetto:</label>
             <textarea name="text" placeholder="Es. Il tuo pacco è bloccato, clicca qui..."></textarea>
+            
+            <label for="file">Oppure carica uno screenshot:</label>
+            <input type="file" name="file" accept="image/*">
             
             <button type="submit">Analizza con IA</button>
         </form>
@@ -188,13 +181,15 @@ def read_root():
     return HTML_TEMPLATE.replace("__RESULT_PLACEHOLDER__", "")
 
 @app.post("/analyze", response_class=HTMLResponse)
-async def web_analyze(request: Request):
+async def web_analyze(text: str = Form(None), file: UploadFile = File(None)):
+    temp_file_path = None
     try:
-        body = await request.body()
-        parsed_data = urllib.parse.parse_qs(body.decode('utf-8'))
-        text_content = parsed_data.get('text', [''])[0]
+        if file and file.filename:
+            temp_file_path = f"/tmp/{file.filename}"
+            with open(temp_file_path, "wb") as buffer:
+                buffer.write(await file.read())
 
-        analysis_result = perform_core_analysis(text_content=text_content)
+        analysis_result = perform_core_analysis(text_content=text, file_path=temp_file_path)
         
         rendered_html = HTML_TEMPLATE.replace("__RESULT_PLACEHOLDER__", analysis_result)
         rendered_html = rendered_html.replace('class="result-box" id="resultBox">', 'class="result-box" id="resultBox" style="display:block;">')
@@ -205,6 +200,9 @@ async def web_analyze(request: Request):
         rendered_html = rendered_html.replace('class="result-box" id="resultBox">', 'class="result-box" id="resultBox" style="display:block;">')
         return rendered_html
 
+# ==========================================
+# 5. WEBHOOK TELEGRAM
+# ==========================================
 @app.post("/telegram")
 async def telegram_webhook(request: Request):
     temp_file_path = None
@@ -238,7 +236,7 @@ async def telegram_webhook(request: Request):
             urllib.request.urlretrieve(download_url, temp_file_path)
             
             reply_text = perform_core_analysis(file_path=temp_file_path)
-            send_telegram_message(chat_id, chat_id if isinstance(chat_id, str) else reply_text) # (fix syntax check) -> send_telegram_message(chat_id, reply_text)
+            send_telegram_message(chat_id, reply_text)
 
     except Exception as e:
         print(f"Errore nel webhook Telegram: {e}")
