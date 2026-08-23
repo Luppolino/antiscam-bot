@@ -60,7 +60,7 @@ def call_gemini_api_native(prompt, image_path=None):
     if not GEMINI_API_KEY:
         return "⚠️ Analisi IA non disponibile: GEMINI_API_KEY non configurata nelle variabili d'ambiente di Render."
         
-    # Endpoint corretto e aggiornato a gemini-3.6-flash come richiesto dai server Google
+    # Usiamo stabilmente gemini-3.6-flash sfruttando l'account a pagamento
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={GEMINI_API_KEY}"
     parts = [{"text": prompt}]
     
@@ -92,7 +92,7 @@ def call_gemini_api_native(prompt, image_path=None):
         print(f"Gemini HTTP Error {he.code}: {error_body}")
         if he.code == 404:
             return "⚠️ Errore di connessione (404): Endpoint o modello non trovato."
-        elif he.code == 429:
+        elif he.code == 429 or he.code == 503:
             return "⚠️ I server di Google sono momentaneamente sovraccarichi. Riprova tra qualche istante!"
         return f"⚠️ Errore API Gemini ({he.code}): {he.reason}"
     except Exception as e:
@@ -123,7 +123,6 @@ def perform_core_analysis(text_content=None, file_path=None):
         return f"Si è verificato un errore durante l'elaborazione: {str(e)}"
         
     finally:
-        # Protocollo di pulizia Zero-Trace
         if file_path and os.path.exists(file_path):
             try:
                 os.remove(file_path)
@@ -137,7 +136,7 @@ def send_telegram_message(chat_id, text):
         return
     try:
         tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        payload = {"chat_id": chat_id, "text": text, "parse_mode": "Markdown"}
+        payload = {"chat_id": chat_id, "text": text}
         data_encoded = json.dumps(payload).encode('utf-8')
         req = urllib.request.Request(tg_url, data=data_encoded, headers={'Content-Type': 'application/json'})
         urllib.request.urlopen(req)
