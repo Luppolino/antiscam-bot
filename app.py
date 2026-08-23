@@ -11,6 +11,44 @@ app = FastAPI()
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 
+# File di salvataggio dinamico della bacheca
+BOARD_FILE = "scams_board.json"
+
+# Inizializziamo la bacheca con dati di default se il file non esiste
+DEFAULT_SCAMS = [
+    {
+        "risk": "🔴",
+        "title": "Finto SMS Poste / Corriere",
+        "desc": "Messaggio con link anomalo che avvisa di un pacco bloccato in giacenza per sbloccare il quale vengono chiesti dati bancari o pagamenti di piccoli importi."
+    },
+    {
+        "risk": "🟡",
+        "title": "Finto rimborso INPS / Agenzia Entrate",
+        "desc": "Comunicazione urgente via mail o SMS che promette un rimborso fiscale immediato invitando a inserire le credenziali SPID o bancarie su portali civetta."
+    },
+    {
+        "risk": "🔴",
+        "title": "Phishing Account Streaming / Servizi",
+        "desc": "Avviso di blocco imminente dell'abbonamento per problemi di pagamento con link diretto a una pagina clone identica all'originale."
+    }
+]
+
+def load_scams_board():
+    if not os.path.exists(BOARD_FILE):
+        save_scams_board(DEFAULT_SCAMS)
+    try:
+        with open(BOARD_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return DEFAULT_SCAMS
+
+def save_scams_board(scams_list):
+    try:
+        with open(BOARD_FILE, "w", encoding="utf-8") as f:
+            json.dump(scams_list, f, ensure_ascii=False, indent=4)
+    except Exception as e:
+        print(f"Errore nel salvataggio della bacheca: {e}")
+
 SYSTEM_PROMPT = """
 Sei 'Non Ci Casco Mai', un esperto di cybersecurity di altissimo livello e un analista antifrode.
 Analizza il messaggio o l'immagine fornita dall'utente e rispondi SEMPRE con una struttura chiara, divisa in queste 4 sezioni:
@@ -60,7 +98,6 @@ def call_gemini_api_native(prompt, image_path=None):
     if not GEMINI_API_KEY:
         return "⚠️ Analisi IA non disponibile: GEMINI_API_KEY non configurata nelle variabili d'ambiente di Render."
         
-    # Usiamo stabilmente gemini-3.6-flash sfruttando l'account a pagamento
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={GEMINI_API_KEY}"
     parts = [{"text": prompt}]
     
@@ -143,7 +180,20 @@ def send_telegram_message(chat_id, text):
     except Exception as e:
         print(f"Errore invio messaggio Telegram: {e}")
 
-HTML_TEMPLATE = """
+def generate_html_with_dynamic_board(result_html=""):
+    scams = load_scams_board()
+    cards_html = ""
+    for scam in scams:
+        cards_html += f"""
+            <div class="scam-card">
+                <h3>{scam.get('risk', '🔴')} {scam.get('title', 'Segnalazione')}</h3>
+                <p>{scam.get('desc', '')}</p>
+            </div>
+        """
+
+    display_style = "block;" if result_html else "none;"
+
+    html_content = f"""
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -151,23 +201,23 @@ HTML_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Non Ci Casco Mai - Analizzatore Antifrode & Bacheca</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f7f6; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { max-width: 700px; width: 100%; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        h1 { color: #1a365d; font-size: 24px; text-align: center; margin-bottom: 5px; }
-        p.subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 25px; }
-        label { font-weight: bold; display: block; margin-bottom: 8px; color: #2d3748; }
-        textarea, input[type="file"] { width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; margin-bottom: 20px; font-size: 14px; box-sizing: border-box; }
-        textarea { height: 100px; resize: vertical; }
-        button { background: #3182ce; color: white; border: none; padding: 12px 20px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-        button:hover { background: #2b6cb0; }
-        .result-box { margin-top: 25px; background: #edf2f7; padding: 20px; border-radius: 8px; white-space: pre-wrap; line-height: 1.5; font-size: 14px; border-left: 5px solid #3182ce; display:none; }
+        body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f7f6; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }}
+        .container {{ max-width: 700px; width: 100%; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }}
+        h1 {{ color: #1a365d; font-size: 24px; text-align: center; margin-bottom: 5px; }}
+        p.subtitle {{ text-align: center; color: #666; font-size: 14px; margin-bottom: 25px; }}
+        label {{ font-weight: bold; display: block; margin-bottom: 8px; color: #2d3748; }}
+        textarea, input[type="file"] {{ width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; margin-bottom: 20px; font-size: 14px; box-sizing: border-box; }}
+        textarea {{ height: 100px; resize: vertical; }}
+        button {{ background: #3182ce; color: white; border: none; padding: 12px 20px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }}
+        button:hover {{ background: #2b6cb0; }}
+        .result-box {{ margin-top: 25px; background: #edf2f7; padding: 20px; border-radius: 8px; white-space: pre-wrap; line-height: 1.5; font-size: 14px; border-left: 5px solid #3182ce; display:{display_style}; }}
         
         /* Bacheca Truffe */
-        .board-section { margin-top: 40px; border-top: 2px solid #e2e8f0; padding-top: 25px; }
-        .board-title { font-size: 18px; color: #2d3748; margin-bottom: 15px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
-        .scam-card { background: #fff5f5; border: 1px solid #feb2b2; border-left: 5px solid #e53e3e; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        .scam-card h3 { margin: 0 0 5px 0; color: #c53030; font-size: 16px; }
-        .scam-card p { margin: 0; font-size: 13px; color: #4a5568; line-height: 1.4; }
+        .board-section {{ margin-top: 40px; border-top: 2px solid #e2e8f0; padding-top: 25px; }}
+        .board-title {{ font-size: 18px; color: #2d3748; margin-bottom: 15px; font-weight: bold; display: flex; align-items: center; gap: 8px; }}
+        .scam-card {{ background: #fff5f5; border: 1px solid #feb2b2; border-left: 5px solid #e53e3e; padding: 15px; border-radius: 8px; margin-bottom: 15px; }}
+        .scam-card h3 {{ margin: 0 0 5px 0; color: #c53030; font-size: 16px; }}
+        .scam-card p {{ margin: 0; font-size: 13px; color: #4a5568; line-height: 1.4; }}
     </style>
 </head>
 <body>
@@ -187,36 +237,23 @@ HTML_TEMPLATE = """
 
         <div class="result-box" id="resultBox">
             <strong>Risultato dell'analisi:</strong><br><br>
-            <span id="resultText">__RESULT_PLACEHOLDER__</span>
+            <span>{result_html}</span>
         </div>
 
-        <!-- BACHECA ULTIME TRUFFE SEGNALATE -->
+        <!-- BACHECA DINAMICA AGGIORNATA IN TEMPO REALE -->
         <div class="board-section">
             <div class="board-title">🚨 Bacheca Ultime Truffe Segnalate</div>
-            
-            <div class="scam-card">
-                <h3>🔴 Finto SMS Poste / Corriere</h3>
-                <p>Messaggio con link anomalo che avvisa di un pacco bloccato in giacenza per sbloccare il quale vengono chiesti dati bancari o pagamenti di piccoli importi.</p>
-            </div>
-            
-            <div class="scam-card">
-                <h3>🟡 Finto rimborso INPS / Agenzia Entrate</h3>
-                <p>Comunicazione urgente via mail o SMS che promette un rimborso fiscale immediato invitando a inserire le credenziali SPID o bancarie su portali civetta.</p>
-            </div>
-
-            <div class="scam-card">
-                <h3>🔴 Phishing Account Streaming / Servizi</h3>
-                <p>Avviso di blocco imminente dell'abbonamento per problemi di pagamento con link diretto a una pagina clone identica all'originale.</p>
-            </div>
+            {cards_html}
         </div>
     </div>
 </body>
 </html>
 """
+    return html_content
 
 @app.get("/", response_class=HTMLResponse)
 def read_root():
-    return HTML_TEMPLATE.replace("__RESULT_PLACEHOLDER__", "")
+    return generate_html_with_dynamic_board("")
 
 @app.post("/analyze", response_class=HTMLResponse)
 async def web_analyze(text: str = Form(None), file: UploadFile = File(None)):
@@ -228,15 +265,10 @@ async def web_analyze(text: str = Form(None), file: UploadFile = File(None)):
                 buffer.write(await file.read())
 
         analysis_result = perform_core_analysis(text_content=text, file_path=temp_file_path)
-        
-        rendered_html = HTML_TEMPLATE.replace("__RESULT_PLACEHOLDER__", analysis_result)
-        rendered_html = rendered_html.replace('class="result-box" id="resultBox">', 'class="result-box" id="resultBox" style="display:block;">')
-        return rendered_html
+        return generate_html_with_dynamic_board(analysis_result)
 
     except Exception as e:
-        rendered_html = HTML_TEMPLATE.replace("__RESULT_PLACEHOLDER__", f"Errore durante l'elaborazione web: {str(e)}")
-        rendered_html = rendered_html.replace('class="result-box" id="resultBox">', 'class="result-box" id="resultBox" style="display:block;">')
-        return rendered_html
+        return generate_html_with_dynamic_board(f"Errore durante l'elaborazione web: {str(e)}")
 
 @app.post("/telegram")
 async def telegram_webhook(request: Request):
