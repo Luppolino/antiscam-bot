@@ -3,7 +3,7 @@ import json
 import urllib.request
 import urllib.parse
 import base64
-from fastapi import FastAPI, Request, Form, File, UploadFile
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 
 app = FastAPI()
@@ -155,8 +155,7 @@ HTML_TEMPLATE = """
         h1 { color: #1a365d; font-size: 24px; text-align: center; margin-bottom: 5px; }
         p.subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 25px; }
         label { font-weight: bold; display: block; margin-bottom: 8px; color: #2d3748; }
-        textarea, input[type="file"] { width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; margin-bottom: 20px; font-size: 14px; box-sizing: border-box; }
-        textarea { height: 100px; resize: vertical; }
+        textarea { width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; margin-bottom: 20px; font-size: 14px; box-sizing: border-box; height: 100px; resize: vertical; }
         button { background: #3182ce; color: white; border: none; padding: 12px 20px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
         button:hover { background: #2b6cb0; }
         .result-box { margin-top: 25px; background: #edf2f7; padding: 20px; border-radius: 8px; white-space: pre-wrap; line-height: 1.5; font-size: 14px; border-left: 5px solid #3182ce; display:none; }
@@ -165,14 +164,11 @@ HTML_TEMPLATE = """
 <body>
     <div class="container">
         <h1>Non Ci Casco Mai 🛡️</h1>
-        <p class="subtitle">Verifica subito se un messaggio, un link o uno screenshot è una truffa.</p>
+        <p class="subtitle">Verifica subito se un messaggio o un link è una truffa.</p>
         
-        <form action="/analyze" method="post" enctype="multipart/form-data">
+        <form action="/analyze" method="post">
             <label for="text">Incolla qui il messaggio o il link sospetto:</label>
             <textarea name="text" placeholder="Es. Il tuo pacco è bloccato, clicca qui..."></textarea>
-            
-            <label for="file">Oppure carica uno screenshot:</label>
-            <input type="file" name="file" accept="image/*">
             
             <button type="submit">Analizza con IA</button>
         </form>
@@ -191,15 +187,14 @@ def read_root():
     return HTML_TEMPLATE.replace("__RESULT_PLACEHOLDER__", "")
 
 @app.post("/analyze", response_class=HTMLResponse)
-async def web_analyze(text: str = Form(None), file: UploadFile = File(None)):
-    temp_file_path = None
+async def web_analyze(request: Request):
     try:
-        if file and file.filename:
-            temp_file_path = f"/tmp/{file.filename}"
-            with open(temp_file_path, "wb") as buffer:
-                buffer.write(await file.read())
+        # Legge il corpo della richiesta in modo nativo senza dipendenze esterne
+        body = await request.body()
+        parsed_data = urllib.parse.parse_qs(body.decode('utf-8'))
+        text_content = parsed_data.get('text', [''])[0]
 
-        analysis_result = perform_core_analysis(text_content=text, file_path=temp_file_path)
+        analysis_result = perform_core_analysis(text_content=text_content)
         
         rendered_html = HTML_TEMPLATE.replace("__RESULT_PLACEHOLDER__", analysis_result)
         rendered_html = rendered_html.replace('class="result-box" id="resultBox">', 'class="result-box" id="resultBox" style="display:block;">')
