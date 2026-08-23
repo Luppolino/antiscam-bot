@@ -60,8 +60,8 @@ def call_gemini_api_native(prompt, image_path=None):
     if not GEMINI_API_KEY:
         return "⚠️ Analisi IA non disponibile: GEMINI_API_KEY non configurata nelle variabili d'ambiente di Render."
         
-    # Endpoint aggiornato al modello stabile e attivo gemini-2.5-flash
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+    # Endpoint aggiornato esattamente come richiesto dai log di Google a gemini-3.6-flash
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={GEMINI_API_KEY}"
     parts = [{"text": prompt}]
     
     if image_path and os.path.exists(image_path):
