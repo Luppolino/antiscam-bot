@@ -14,7 +14,6 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 # File di salvataggio dinamico della bacheca
 BOARD_FILE = "scams_board.json"
 
-# Inizializziamo la bacheca con dati di default se il file non esiste
 DEFAULT_SCAMS = [
     {
         "risk": "🔴",
@@ -240,7 +239,7 @@ def generate_html_with_dynamic_board(result_html=""):
             <span>{result_html}</span>
         </div>
 
-        <!-- BACHECA DINAMICA AGGIORNATA IN TEMPO REALE -->
+        <!-- BACHECA DINAMICA -->
         <div class="board-section">
             <div class="board-title">🚨 Bacheca Ultime Truffe Segnalate</div>
             {cards_html}
@@ -269,6 +268,32 @@ async def web_analyze(text: str = Form(None), file: UploadFile = File(None)):
 
     except Exception as e:
         return generate_html_with_dynamic_board(f"Errore durante l'elaborazione web: {str(e)}")
+
+# Endpoint segreto per aggiornare automaticamente la bacheca tramite IA
+@app.get("/update-radar")
+def update_radar():
+    prompt = """
+    Genera una lista di 3 truffe informatiche o phishing molto diffuse in Italia di recente.
+    Restituisci la risposta ESCLUSIVAMENTE in formato JSON puro (senza blocchi di codice markdown o altri commenti), 
+    come una lista di oggetti con chiavi: "risk" (che deve essere "🔴" o "🟡"), "title" (titolo breve della truffa) e "desc" (descrizione sintetica del pericolo).
+    """
+    ai_response = call_gemini_api_native(prompt)
+    try:
+        # Pulisce eventuali formattazioni markdown se presenti
+        clean_json = ai_response.strip()
+        if clean_json.startswith("```json"):
+            clean_json = clean_json[7:]
+        if clean_json.endswith("```"):
+            clean_json = clean_json[:-3]
+        
+        new_scams = json.loads(clean_json.strip())
+        if isinstance(new_scams, list) and len(new_scams) > 0:
+            save_scams_board(new_scams)
+            return {"status": "success", "message": "Bacheca aggiornata con successo dall'IA!", "data": new_scams}
+    except Exception as e:
+        return {"status": "error", "message": f"Errore nel parsing della risposta IA: {e}", "raw": ai_response}
+    
+    return {"status": "error", "message": "Impossibile aggiornare la bacheca."}
 
 @app.post("/telegram")
 async def telegram_webhook(request: Request):
