@@ -11,8 +11,8 @@ TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 
 
 def analyze_with_gemini(prompt_text, image_path=None):
-  # Utilizziamo gemini-2.5-flash sull'endpoint v1beta supportato per le chiamate dirette
-  url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+  # Utilizziamo l'endpoint v1 e il modello standard gemini-1.5-flash
+  url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
   
   parts = [{"text": prompt_text}]
 
@@ -49,7 +49,7 @@ def analyze_with_gemini(prompt_text, image_path=None):
   except urllib.error.HTTPError as e:
     error_body = e.read().decode("utf-8")
     print(f"Errore HTTP Gemini ({e.code}): {error_body}")
-    return f"⚠️ Errore API Gemini ({e.code}). Controlla che la chiave supporti 'gemini-2.5-flash'."
+    return f"⚠️ Errore API Gemini ({e.code}). Controlla la chiave API su Render."
   except Exception as e:
     print(f"Errore imprevisto API Gemini: {e}")
     return "⚠️ Si è verificato un errore imprevisto durante l'elaborazione con l'IA."
