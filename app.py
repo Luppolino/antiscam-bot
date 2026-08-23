@@ -16,8 +16,8 @@ if GEMINI_API_KEY:
 
 def analyze_with_gemini(prompt_text, image_path=None):
     try:
-        # Aggiorniamo al modello flash corrente supportato dall'SDK ufficiale
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        # Utilizziamo il modello indicato dal sistema di Google nei log correnti
+        model = genai.GenerativeModel('gemini-3.6-flash')
         
         contents = [prompt_text]
 
@@ -35,13 +35,7 @@ def analyze_with_gemini(prompt_text, image_path=None):
         
     except Exception as e:
         print(f"Errore durante la chiamata a Gemini: {str(e)}")
-        # Tentativo di fallback immediato su gemini-2.0-flash se il 2.5 dovesse dare problemi
-        try:
-            model_fallback = genai.GenerativeModel('gemini-2.0-flash')
-            response = model_fallback.generate_content(contents)
-            return response.text
-        except Exception as e2:
-            return f"⚠️ Errore di connessione con l'IA: {str(e2)}"
+        return f"⚠️ Errore di connessione con l'IA: {str(e)}"
 
 
 def send_telegram_message(chat_id, text):
