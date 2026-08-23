@@ -16,18 +16,17 @@ if GEMINI_API_KEY:
 
 def analyze_with_gemini(prompt_text, image_path=None):
     try:
-        # Usiamo direttamente il modello corretto richiesto dai server
         model = genai.GenerativeModel('gemini-3.6-flash')
         contents = [prompt_text]
 
         if image_path and os.path.exists(image_path):
             with open(image_path, "rb") as img_file:
                 image_bytes = img_file.read()
-                image_part = {
+                # Passiamo i byte direttamente senza occupare memoria extra
+                contents.append({
                     "mime_type": "image/jpeg",
                     "data": image_bytes
-                }
-                contents.append(image_part)
+                })
 
         response = model.generate_content(contents)
         return response.text
@@ -117,8 +116,10 @@ def telegram_webhook():
 
             temp_file_path = None
             if "photo" in message:
-                photo_file_id = message["photo"][-1]["file_id"]
+                # Prendiamo la foto con risoluzione intermedia per non esaurire la RAM su Render
+                photo_file_id = message["photo"][-2]["file_id"] if len(message["photo"]) > 1 else message["photo"][0]["file_id"]
                 file_info_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getFile?file_id={photo_file_id}"
+                
                 with urllib.request.urlopen(file_info_url) as f_info:
                     file_data = json.loads(f_info.read().decode("utf-8"))
                     if file_data.get("ok"):
@@ -131,6 +132,7 @@ def telegram_webhook():
 
             if temp_file_path and os.path.exists(temp_file_path):
                 os.remove(temp_file_path)
+                print(f"[PRIVACY ZERO-TRACE] File {temp_file_path} eliminato.")
 
             send_telegram_message(chat_id, analysis_result)
 
