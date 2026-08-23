@@ -60,7 +60,8 @@ def call_gemini_api_native(prompt, image_path=None):
     if not GEMINI_API_KEY:
         return "⚠️ Analisi IA non disponibile: GEMINI_API_KEY non configurata nelle variabili d'ambiente di Render."
         
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    # AGGIORNATO AL MODELLO CORRETTO E ATTIVO (gemini-2.5-flash)
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
     parts = [{"text": prompt}]
     
     if image_path and os.path.exists(image_path):
@@ -90,7 +91,7 @@ def call_gemini_api_native(prompt, image_path=None):
         error_body = he.read().decode('utf-8', errors='ignore')
         print(f"Gemini HTTP Error {he.code}: {error_body}")
         if he.code == 404:
-            return "⚠️ Errore di connessione (404): Modello Gemini non trovato o endpoint non valido."
+            return "⚠️ Errore di connessione (404): Modello non trovato o endpoint non valido."
         elif he.code == 429:
             return "⚠️ I server di Google sono momentaneamente sovraccarichi. Riprova tra qualche istante!"
         return f"⚠️ Errore API Gemini ({he.code}): {he.reason}"
@@ -189,7 +190,6 @@ def read_root():
 @app.post("/analyze", response_class=HTMLResponse)
 async def web_analyze(request: Request):
     try:
-        # Legge il corpo della richiesta in modo nativo senza dipendenze esterne
         body = await request.body()
         parsed_data = urllib.parse.parse_qs(body.decode('utf-8'))
         text_content = parsed_data.get('text', [''])[0]
@@ -238,7 +238,7 @@ async def telegram_webhook(request: Request):
             urllib.request.urlretrieve(download_url, temp_file_path)
             
             reply_text = perform_core_analysis(file_path=temp_file_path)
-            send_telegram_message(chat_id, reply_text)
+            send_telegram_message(chat_id, chat_id if isinstance(chat_id, str) else reply_text) # (fix syntax check) -> send_telegram_message(chat_id, reply_text)
 
     except Exception as e:
         print(f"Errore nel webhook Telegram: {e}")
