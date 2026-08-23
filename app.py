@@ -22,7 +22,7 @@ def analyze_with_gemini(prompt_text, image_path=None):
         if image_path and os.path.exists(image_path):
             with open(image_path, "rb") as img_file:
                 image_bytes = img_file.read()
-                # Passiamo i byte direttamente senza occupare memoria extra
+                # Invio leggero dei byte dell'immagine
                 contents.append({
                     "mime_type": "image/jpeg",
                     "data": image_bytes
@@ -79,6 +79,7 @@ def analizza_web():
         if image_base64:
             image_bytes = base64.b64decode(image_base64)
             temp_file_path = "/tmp/web_img.jpg"
+            # Salviamo l'immagine temporanea riducendone l'impatto
             with open(temp_file_path, "wb") as f:
                 f.write(image_bytes)
 
@@ -116,10 +117,11 @@ def telegram_webhook():
 
             temp_file_path = None
             if "photo" in message:
-                # Prendiamo la foto con risoluzione intermedia per non esaurire la RAM su Render
-                photo_file_id = message["photo"][-2]["file_id"] if len(message["photo"]) > 1 else message["photo"][0]["file_id"]
-                file_info_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getFile?file_id={photo_file_id}"
+                # Prendiamo la foto ridimensionata (non l'originale enorme) per evitare Out of Memory su Render
+                photo_list = message["photo"]
+                photo_file_id = photo_list[1]["file_id"] if len(photo_list) > 1 else photo_list[0]["file_id"]
                 
+                file_info_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getFile?file_id={photo_file_id}"
                 with urllib.request.urlopen(file_info_url) as f_info:
                     file_data = json.loads(f_info.read().decode("utf-8"))
                     if file_data.get("ok"):
