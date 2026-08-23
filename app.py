@@ -1,4 +1,5 @@
 import base64
+import json
 import os
 import urllib.request
 from fastapi import FastAPI, Request, Response
@@ -10,7 +11,8 @@ TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 
 
 def analyze_with_gemini(prompt_text, image_path=None):
-  url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+  # Utilizziamo l'endpoint v1 stabile per evitare errori 404 sui modelli
+  url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
   
   parts = [{"text": prompt_text}]
 
@@ -29,8 +31,8 @@ def analyze_with_gemini(prompt_text, image_path=None):
       print(f"Errore lettura immagine: {e}")
 
   payload = {"contents": [{"parts": parts}]}
-  import json
   data = json.dumps(payload).encode("utf-8")
+  
   req = urllib.request.Request(
       url, data=data, headers={"Content-Type": "application/json"}, method="POST"
   )
@@ -44,13 +46,16 @@ def analyze_with_gemini(prompt_text, image_path=None):
           .get("parts", [{}])[0]
           .get("text", "Nessuna risposta generata.")
       )
+  except urllib.error.HTTPError as e:
+    error_body = e.read().decode("utf-8")
+    print(f"Errore HTTP Gemini ({e.code}): {error_body}")
+    return f"⚠️ Errore di connessione con l'IA (Codice {e.code}). Verifica la chiave API."
   except Exception as e:
-    print(f"Errore API Gemini: {e}")
-    return "⚠️ Errore durante l'elaborazione con l'IA."
+    print(f"Errore imprevisto API Gemini: {e}")
+    return "⚠️ Si è verificato un errore imprevisto durante l'elaborazione con l'IA."
 
 
 def send_telegram_message(chat_id, text):
-  import json
   url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
   payload = {"chat_id": chat_id, "text": text, "parse_mode": "Markdown"}
   data = json.dumps(payload).encode("utf-8")
@@ -90,7 +95,6 @@ async def telegram_webhook(request: Request):
 
       temp_file_path = None
       if "photo" in message:
-        import json
         photo_file_id = message["photo"][-1]["file_id"]
         file_info_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getFile?file_id={photo_file_id}"
         with urllib.request.urlopen(file_info_url) as f_info:
