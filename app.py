@@ -7,7 +7,6 @@ import json
 
 app = FastAPI()
 
-# Configurazione delle chiavi dalle variabili d'ambiente di Render
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 
@@ -16,14 +15,12 @@ if GEMINI_API_KEY:
 
 
 def analyze_with_gemini(prompt_text, image_path=None):
-    """Utilizza l'SDK ufficiale di Google per evitare qualsiasi errore 404 sull'endpoint REST"""
     try:
-        # Usiamo il modello standard stabile supportato dall'SDK
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # Aggiorniamo al modello flash corrente supportato dall'SDK ufficiale
+        model = genai.GenerativeModel('gemini-2.5-flash')
         
         contents = [prompt_text]
 
-        # Se è presente un'immagine temporanea, la carichiamo per l'analisi
         if image_path and os.path.exists(image_path):
             with open(image_path, "rb") as img_file:
                 image_bytes = img_file.read()
@@ -38,7 +35,13 @@ def analyze_with_gemini(prompt_text, image_path=None):
         
     except Exception as e:
         print(f"Errore durante la chiamata a Gemini: {str(e)}")
-        return f"⚠️ Errore di connessione con l'IA: {str(e)}"
+        # Tentativo di fallback immediato su gemini-2.0-flash se il 2.5 dovesse dare problemi
+        try:
+            model_fallback = genai.GenerativeModel('gemini-2.0-flash')
+            response = model_fallback.generate_content(contents)
+            return response.text
+        except Exception as e2:
+            return f"⚠️ Errore di connessione con l'IA: {str(e2)}"
 
 
 def send_telegram_message(chat_id, text):
@@ -93,7 +96,6 @@ async def telegram_webhook(request: Request):
 
             analysis_result = analyze_with_gemini(prompt_base, temp_file_path)
 
-            # Protocollo Zero-Trace: cancellazione immediata del file temporaneo
             if temp_file_path and os.path.exists(temp_file_path):
                 os.remove(temp_file_path)
                 print(f"[PRIVACY ZERO-TRACE] File {temp_file_path} eliminato definitivamente.")
