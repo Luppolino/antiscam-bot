@@ -1,11 +1,11 @@
 import base64
 import os
-import google.generativeai as genai
-from fastapi import FastAPI, Request, Response
-import urllib.request
 import json
+import urllib.request
+from flask import Flask, render_template, request, jsonify
+import google.generativeai as genai
 
-app = FastAPI()
+app = Flask(__name__)
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
@@ -16,9 +16,7 @@ if GEMINI_API_KEY:
 
 def analyze_with_gemini(prompt_text, image_path=None):
     try:
-        # Utilizziamo il modello indicato dal sistema di Google nei log correnti
-        model = genai.GenerativeModel('gemini-3.6-flash')
-        
+        model = genai.GenerativeModel('gemini-1.5-flash')
         contents = [prompt_text]
 
         if image_path and os.path.exists(image_path):
@@ -34,8 +32,13 @@ def analyze_with_gemini(prompt_text, image_path=None):
         return response.text
         
     except Exception as e:
-        print(f"Errore durante la chiamata a Gemini: {str(e)}")
-        return f"⚠️ Errore di connessione con l'IA: {str(e)}"
+        # Fallback automatico se il flash standard richiede un aggiornamento
+        try:
+            model_fallback = genai.GenerativeModel('gemini-2.0-flash')
+            response = model_fallback.generate_content(contents)
+            return response.text
+        except Exception as e2:
+            return f"⚠️ Errore di connessione con l'IA: {str(e2)}"
 
 
 def send_telegram_message(chat_id, text):
@@ -51,15 +54,66 @@ def send_telegram_message(chat_id, text):
         print(f"Errore invio Telegram: {e}")
 
 
-@app.get("/")
-def health_check():
-    return Response(content="==> NonCiCascoMai Service is running (Zero-Trace active)", media_type="text/plain")
+# Rotta per il Sito Web (Carica la pagina HTML da templates/index.html)
+@app.route('/')
+def home():
+    return render_template('index.html')
 
 
-@app.post("/telegram")
-async def telegram_webhook(request: Request):
+# Rotta per le richieste di analisi provenienti dal Sito Web
+@app.route('/analizza', methods=['POST'])
+def analizza_web():
     try:
-        update = await request.json()
+        data = request.get_json()
+        testo = data.get('testo', '')
+        image_base64 = data.get('image', None)
+
+        if not testo and not image_base64:
+            return jsonify({'errore': 'Inserisci un messaggio o seleziona uno screenshot.'}), 400
+
+        prompt_base = (
+            "Sei NonCiCascoMai, un assistente di sicurezza digitale esperto in "
+            "anti-phishing e prevenzione frodi. Analizza il seguente contenuto "
+            "fornendo una valutazione del rischio strutturata in 4 parti: "
+            "1. Livello di rischio (Basso/Medio/Alto), "
+            "2. Indicatori di allerta rilevati (red flags), "
+            "3. Motivazione dettagliata, "
+            "4. Consigli pratici su cosa fare.\n\nContenuto da analizzare: "
+            + testo
+        )
+
+        contents = [prompt_base]
+        temp_file_path = None
+
+        if image_base64:
+            image_bytes = base64.b64decode(image_base64)
+            temp_file_path = "/tmp/web_img.jpg"
+            with open(temp_file_path, "wb") as f:
+                f.write(image_bytes)
+            
+            contents.append({
+                "mime_type": "image/jpeg",
+                "data": image_bytes
+            })
+
+        analysis_result = analyze_with_gemini(contents[0], temp_file_path if image_base64 else None)
+
+        if temp_file_path and os.path.exists(temp_file_path):
+            os.remove(temp_file_path)
+
+        # Formattazione per la visualizzazione HTML pulita
+        risultato_formattato = analysis_result.replace('\n', '<br>')
+        return jsonify({'risultato': risultato_formattato})
+
+    except Exception as e:
+        return jsonify({'errore': f"Errore interno: {str(e)}"}), 500
+
+
+# Rotta per il Bot Telegram (Webhook)
+@app.route('/telegram', methods=['POST'])
+def telegram_webhook():
+    try:
+        update = request.get_json()
         if "message" in update:
             message = update["message"]
             chat_id = message["chat"]["id"]
@@ -92,11 +146,15 @@ async def telegram_webhook(request: Request):
 
             if temp_file_path and os.path.exists(temp_file_path):
                 os.remove(temp_file_path)
-                print(f"[PRIVACY ZERO-TRACE] File {temp_file_path} eliminato definitivamente.")
 
             send_telegram_message(chat_id, analysis_result)
 
-        return {"status": "ok"}
+        return jsonify({"status": "ok"})
     except Exception as e:
-        print(f"Errore webhook: {e}")
-        return {"status": "error"}
+        print(f"Errore webhook telegram: {e}")
+        return jsonify({"status": "error"})
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
