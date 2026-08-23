@@ -16,7 +16,8 @@ if GEMINI_API_KEY:
 
 def analyze_with_gemini(prompt_text, image_path=None):
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # Usiamo direttamente il modello corretto richiesto dai server
+        model = genai.GenerativeModel('gemini-3.6-flash')
         contents = [prompt_text]
 
         if image_path and os.path.exists(image_path):
@@ -32,13 +33,8 @@ def analyze_with_gemini(prompt_text, image_path=None):
         return response.text
         
     except Exception as e:
-        # Fallback automatico se il flash standard richiede un aggiornamento
-        try:
-            model_fallback = genai.GenerativeModel('gemini-2.0-flash')
-            response = model_fallback.generate_content(contents)
-            return response.text
-        except Exception as e2:
-            return f"⚠️ Errore di connessione con l'IA: {str(e2)}"
+        print(f"Errore IA: {str(e)}")
+        return f"⚠️ Errore di connessione con l'IA: {str(e)}"
 
 
 def send_telegram_message(chat_id, text):
@@ -54,13 +50,11 @@ def send_telegram_message(chat_id, text):
         print(f"Errore invio Telegram: {e}")
 
 
-# Rotta per il Sito Web (Carica la pagina HTML da templates/index.html)
 @app.route('/')
 def home():
     return render_template('index.html')
 
 
-# Rotta per le richieste di analisi provenienti dal Sito Web
 @app.route('/analizza', methods=['POST'])
 def analizza_web():
     try:
@@ -82,26 +76,18 @@ def analizza_web():
             + testo
         )
 
-        contents = [prompt_base]
         temp_file_path = None
-
         if image_base64:
             image_bytes = base64.b64decode(image_base64)
             temp_file_path = "/tmp/web_img.jpg"
             with open(temp_file_path, "wb") as f:
                 f.write(image_bytes)
-            
-            contents.append({
-                "mime_type": "image/jpeg",
-                "data": image_bytes
-            })
 
-        analysis_result = analyze_with_gemini(contents[0], temp_file_path if image_base64 else None)
+        analysis_result = analyze_with_gemini(prompt_base, temp_file_path)
 
         if temp_file_path and os.path.exists(temp_file_path):
             os.remove(temp_file_path)
 
-        # Formattazione per la visualizzazione HTML pulita
         risultato_formattato = analysis_result.replace('\n', '<br>')
         return jsonify({'risultato': risultato_formattato})
 
@@ -109,7 +95,6 @@ def analizza_web():
         return jsonify({'errore': f"Errore interno: {str(e)}"}), 500
 
 
-# Rotta per il Bot Telegram (Webhook)
 @app.route('/telegram', methods=['POST'])
 def telegram_webhook():
     try:
