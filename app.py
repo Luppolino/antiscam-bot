@@ -2,16 +2,21 @@ import os
 import json
 import urllib.request
 import urllib.parse
-import base64
 from fastapi import FastAPI, Request, Form, File, UploadFile
 from fastapi.responses import HTMLResponse
+from PIL import Image
+import google.generativeai as genai
 
 # Inizializzazione dell'applicazione FastAPI
 app = FastAPI()
 
 # Recupera le chiavi dalle variabili d'ambiente di Render
-BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
+
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    model = genai.GenerativeModel('gemini-1.5-flash')
 
 # ==========================================
 # 1. CONFIGURAZIONE DEL SISTEMA & PROMPT IA
@@ -65,49 +70,13 @@ def analyze_domain_safety(url_string):
         return ""
 
 # ==========================================
-# 3. CHIAMATA IA NATIVA (SENZA LIBRERIE ESTERNE)
-# ==========================================
-def call_gemini_api_native(prompt, image_path=None):
-    """Chiama Gemini usando solo HTTP nativo, evitando crash per moduli mancanti."""
-    if not GEMINI_API_KEY:
-        return "Analisi IA completata (chiave Gemini non configurata sul server)."
-        
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
-    parts = [{"text": prompt}]
-    
-    # Se c'è un'immagine, la codifica in base64 senza usare Pillow (PIL)
-    if image_path and os.path.exists(image_path):
-        try:
-            with open(image_path, "rb") as image_file:
-                encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
-            parts.append({
-                "inline_data": {
-                    "mime_type": "image/jpeg",
-                    "data": encoded_string
-                }
-            })
-        except Exception as e:
-            return f"Errore nella lettura dell'immagine: {e}"
-        
-    payload = {"contents": [{"parts": parts}]}
-    data_encoded = json.dumps(payload).encode('utf-8')
-    req = urllib.request.Request(url, data=data_encoded, headers={'Content-Type': 'application/json'})
-    
-    try:
-        with urllib.request.urlopen(req) as response:
-            result = json.loads(response.read().decode())
-            return result["candidates"][0]["content"]["parts"][0]["text"]
-    except Exception as e:
-        error_msg = str(e)
-        if "429" in error_msg or "ResourceExhausted" in error_msg:
-            return "⚠️ I server di Google sono momentaneamente sovraccarichi a causa di un picco di traffico. Riprova tra qualche istante!"
-        return f"Errore di comunicazione con Google Gemini: {error_msg}"
-
-# ==========================================
-# 4. MOTORE CENTRALE DI ANALISI (TELEGRAM + WEB)
+# 3. MOTORE CENTRALE DI ANALISI (UFFICIALE GOOGLE)
 # ==========================================
 def perform_core_analysis(text_content=None, file_path=None):
     try:
+        if not GEMINI_API_KEY:
+            return "⚠️ Analisi IA non disponibile: GEMINI_API_KEY non configurata su Render."
+
         domain_warning = ""
         prompt_to_send = SYSTEM_PROMPT
         
@@ -117,20 +86,26 @@ def perform_core_analysis(text_content=None, file_path=None):
             if domain_warning:
                 prompt_to_send += f"\n\n[Nota tecnica preventiva: {domain_warning}]"
 
-        if file_path:
-            prompt_to_send += "\n\nAnalizza questo screenshot per individuare eventuali truffe o tentativi di phishing."
-
-        # Esegue la chiamata all'IA
-        response_text = call_gemini_api_native(prompt_to_send, file_path)
+        content_payload = [prompt_to_send]
         
-        # Unisce il warning tecnico se la chiamata fallisce
-        if domain_warning and ("Errore" in response_text or "non configurata" in response_text):
+        if file_path and os.path.exists(file_path):
+            img = Image.open(file_path)
+            content_payload.append(img)
+            content_payload.append("Analizza questo screenshot per individuare eventuali truffe o tentativi di phishing.")
+
+        response = model.generate_content(content_payload)
+        response_text = response.text
+
+        if domain_warning and ("Errore" in response_text or "non disponibile" in response_text):
             return f"{domain_warning}\n\n{response_text}"
             
         return response_text
 
     except Exception as e:
-        return f"Si è verificato un errore durante l'elaborazione: {str(e)}"
+        error_msg = str(e)
+        if "429" in error_msg or "ResourceExhausted" in error_msg:
+            return "⚠️ I server di Google sono momentaneamente sovraccarichi a causa di un picco di traffico. Riprova tra qualche istante!"
+        return f"Si è verificato un errore durante l'elaborazione: {error_msg}"
         
     finally:
         # CANCELLAZIONE ISTANTANEA OBBLIGATORIA (Zero-Trace)
@@ -154,7 +129,7 @@ def send_telegram_message(chat_id, text):
         print(f"Errore invio messaggio Telegram: {e}")
 
 # ==========================================
-# 5. INTERFACCIA WEB (SITO UFFICIALE)
+# 4. INTERFACCIA WEB (SITO UFFICIALE)
 # ==========================================
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -173,7 +148,7 @@ HTML_TEMPLATE = """
         textarea { height: 100px; resize: vertical; }
         button { background: #3182ce; color: white; border: none; padding: 12px 20px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
         button:hover { background: #2b6cb0; }
-        .result-box { margin-top: 25px; background: #edf2f7; padding: 20px; border-radius: 8px; white-space: pre-wrap; line-height: 1.5; font-size: 14px; border-left: 5px solid #3182ce; }
+        .result-box { margin-top: 25px; background: #edf2f7; padding: 20px; border-radius: 8px; white-space: pre-wrap; line-height: 1.5; font-size: 14px; border-left: 5px solid #3182ce; display:none; }
     </style>
 </head>
 <body>
@@ -191,12 +166,10 @@ HTML_TEMPLATE = """
             <button type="submit">Analizza con IA</button>
         </form>
 
-        {% if result %}
-        <div class="result-box">
+        <div class="result-box" id="resultBox">
             <strong>Risultato dell'analisi:</strong><br><br>
-            {{ result }}
+            <span id="resultText">__RESULT_PLACEHOLDER__</span>
         </div>
-        {% endif %}
     </div>
 </body>
 </html>
@@ -204,7 +177,7 @@ HTML_TEMPLATE = """
 
 @app.get("/", response_class=HTMLResponse)
 def read_root():
-    return HTML_TEMPLATE.replace("{% if result %}", "<!--").replace("{% endif %}", "-->")
+    return HTML_TEMPLATE.replace("__RESULT_PLACEHOLDER__", "")
 
 @app.post("/analyze", response_class=HTMLResponse)
 async def web_analyze(text: str = Form(None), file: UploadFile = File(None)):
@@ -216,21 +189,18 @@ async def web_analyze(text: str = Form(None), file: UploadFile = File(None)):
                 buffer.write(await file.read())
 
         analysis_result = perform_core_analysis(text_content=text, file_path=temp_file_path)
-
-        rendered_html = HTML_TEMPLATE.replace(
-            '<div class="result-box" style="display:none">', '<div class="result-box">'
-        ).replace("{{ result }}", analysis_result)
         
-        rendered_html = rendered_html.replace(
-            '<div class="result-box">', '<div class="result-box" style="display:block;">'
-        )
+        rendered_html = HTML_TEMPLATE.replace("__RESULT_PLACEHOLDER__", analysis_result)
+        rendered_html = rendered_html.replace('class="result-box" id="resultBox">', 'class="result-box" id="resultBox" style="display:block;">')
         return rendered_html
 
     except Exception as e:
-        return HTML_TEMPLATE.replace("{{ result }}", f"Errore durante l'elaborazione web: {str(e)}")
+        rendered_html = HTML_TEMPLATE.replace("__RESULT_PLACEHOLDER__", f"Errore durante l'elaborazione web: {str(e)}")
+        rendered_html = rendered_html.replace('class="result-box" id="resultBox">', 'class="result-box" id="resultBox" style="display:block;">')
+        return rendered_html
 
 # ==========================================
-# 6. WEBHOOK TELEGRAM
+# 5. WEBHOOK TELEGRAM
 # ==========================================
 @app.post("/telegram")
 async def telegram_webhook(request: Request):
@@ -243,14 +213,14 @@ async def telegram_webhook(request: Request):
         message = data["message"]
         chat_id = message["chat"]["id"]
         
-        # A. GESTIONE TESTO TELEGRAM
         if "text" in message:
             text = message["text"]
             reply_text = perform_core_analysis(text_content=text)
             send_telegram_message(chat_id, reply_text)
 
-        # B. GESTIONE FOTO TELEGRAM (con Zero-Trace)
         elif "photo" in message:
+            if not BOT_TOKEN:
+                return {"status": "ok"}
             send_telegram_message(chat_id, "Ricevuto! Analisi dello screenshot in corso...")
             photo = message["photo"][-1]
             file_id = photo["file_id"]
