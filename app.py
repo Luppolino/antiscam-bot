@@ -163,16 +163,26 @@ def generate_html_page(result_html=""):
     .scam-card p {{ margin: 0; font-size: 13px; color: #4a5568; }}
     .btn-up {{ background: #38a169; width: auto; padding: 6px 12px; font-size: 13px; }}
     </style>
+    <script>
+    function showLoading() {{
+        var btn = document.getElementById('submit-btn');
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        btn.innerText = '⏳ Analisi in corso...';
+        document.getElementById('loading-msg').style.display = 'block';
+    }}
+    </script>
 </head>
 <body>
 <div class="container">
 <h1>Non Ci Casco Mai 🛡️</h1>
-<form action="/analyze" method="post" enctype="multipart/form-data">
+<form action="/analyze" method="post" enctype="multipart/form-data" onsubmit="showLoading()">
 <label>Incolla messaggio o link:</label>
 <textarea name="text" placeholder="Es. Pacco bloccato..."></textarea>
 <label>Oppure carica screenshot:</label>
 <input type="file" name="file" accept="image/*">
-<button type="submit">Analizza con IA</button>
+<button type="submit" id="submit-btn">Analizza con IA</button>
+<div id="loading-msg" style="display:none; text-align:center; margin-top:10px; color:#3182ce; font-weight:bold;">⏳ Attendere qualche secondo... Analisi in corso...</div>
 </form>
 <div class="result"><strong>Risultato:</strong><br><br>{result_html}</div>
 <div class="board">
