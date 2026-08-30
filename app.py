@@ -5,7 +5,8 @@ import urllib.parse
 import base64
 import time
 from fastapi import FastAPI, Request, Form, File, UploadFile
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
+from PIL import Image
 
 app = FastAPI()
 
@@ -93,11 +94,21 @@ def call_gemini_api_native(prompt, image_path=None):
     parts = [{"text": prompt}]
     if image_path and os.path.exists(image_path):
         try:
-            with open(image_path, "rb") as image_file:
+            # Comprimi/ridimensiona l'immagine al volo per renderla velocissima
+            img = Image.open(image_path)
+            img.thumbnail((1024, 1024))
+            compressed_path = image_path + "_comp.jpg"
+            img.convert("RGB").save(compressed_path, "JPEG", quality=80)
+            
+            with open(compressed_path, "rb") as image_file:
                 encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
             parts.append({"inline_data": {"mime_type": "image/jpeg", "data": encoded_string}})
+            
+            if os.path.exists(compressed_path):
+                os.remove(compressed_path)
         except Exception as e:
-            return f"Errore immagine: {e}"
+            return f"Errore elaborazione immagine: {e}"
+            
     payload = {"contents": [{"parts": parts}]}
     req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={'Content-Type': 'application/json'})
     try:
@@ -153,7 +164,7 @@ def generate_html_page(result_html=""):
     body {{ font-family: sans-serif; background: #f4f7f6; margin: 0; padding: 20px; display: flex; justify-content: center; }}
     .container {{ max-width: 700px; width: 100%; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }}
     h1 {{ color: #1a365d; text-align: center; }}
-    textarea, input[file] {{ width: 100%; padding: 10px; margin-bottom: 15px; box-sizing: border-box; border-radius: 6px; border: 1px solid #ccc; }}
+    textarea, input[type="file"] {{ width: 100%; padding: 10px; margin-bottom: 15px; box-sizing: border-box; border-radius: 6px; border: 1px solid #ccc; }}
     textarea {{ height: 90px; }}
     button {{ background: #3182ce; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; }}
     .result {{ margin-top: 20px; background: #edf2f7; padding: 15px; border-radius: 6px; white-space: pre-wrap; display: {disp}; border-left: 5px solid #3182ce; }}
@@ -164,19 +175,45 @@ def generate_html_page(result_html=""):
     .btn-up {{ background: #38a169; width: auto; padding: 6px 12px; font-size: 13px; }}
     </style>
     <script>
-    function showLoading() {{
+    async function sendAnalysis(event) {{
+        event.preventDefault();
         var btn = document.getElementById('submit-btn');
+        var loadingMsg = document.getElementById('loading-msg');
+        var resultBox = document.getElementById('result-box');
+        
         btn.disabled = true;
         btn.style.opacity = '0.6';
         btn.innerText = '⏳ Analisi in corso...';
-        document.getElementById('loading-msg').style.display = 'block';
+        loadingMsg.style.display = 'block';
+        resultBox.style.display = 'none';
+
+        var formData = new FormData(document.getElementById('analysis-form'));
+
+        try {{
+            let response = await fetch('/analyze-ajax', {{
+                method: 'POST',
+                body: formData
+            }});
+            let data = await response.json();
+            
+            resultBox.innerHTML = '<strong>Risultato:</strong><br><br>' + data.result;
+            resultBox.style.display = 'block';
+        }} catch (error) {{
+            resultBox.innerHTML = '<strong>Errore di connessione. Riprova.</strong>';
+            resultBox.style.display = 'block';
+        }} finally {{
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.innerText = 'Analizza con IA';
+            loadingMsg.style.display = 'none';
+        }}
     }}
     </script>
 </head>
 <body>
 <div class="container">
 <h1>Non Ci Casco Mai 🛡️</h1>
-<form action="/analyze" method="post" enctype="multipart/form-data" onsubmit="showLoading()">
+<form id="analysis-form" onsubmit="sendAnalysis(event)">
 <label>Incolla messaggio o link:</label>
 <textarea name="text" placeholder="Es. Pacco bloccato..."></textarea>
 <label>Oppure carica screenshot:</label>
@@ -184,7 +221,7 @@ def generate_html_page(result_html=""):
 <button type="submit" id="submit-btn">Analizza con IA</button>
 <div id="loading-msg" style="display:none; text-align:center; margin-top:10px; color:#3182ce; font-weight:bold;">⏳ Attendere qualche secondo... Analisi in corso...</div>
 </form>
-<div class="result"><strong>Risultato:</strong><br><br>{result_html}</div>
+<div id="result-box" class="result">{ "<strong>Risultato:</strong><br><br>" + result_html if result_html else "" }</div>
 <div class="board">
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
 <h3 style="margin:0;">🚨 Ultime Truffe</h3>
@@ -200,8 +237,8 @@ def generate_html_page(result_html=""):
 def read_root():
     return generate_html_page("")
 
-@app.post("/analyze", response_class=HTMLResponse)
-async def web_analyze(text: str = Form(None), file: UploadFile = File(None)):
+@app.post("/analyze-ajax")
+async def web_analyze_ajax(text: str = Form(None), file: UploadFile = File(None)):
     temp_path = None
     try:
         if file and file.filename:
@@ -209,9 +246,9 @@ async def web_analyze(text: str = Form(None), file: UploadFile = File(None)):
             with open(temp_path, "wb") as buffer:
                 buffer.write(await file.read())
         res = perform_core_analysis(text_content=text, file_path=temp_path)
-        return generate_html_page(res)
+        return JSONResponse({"result": res})
     except Exception as e:
-        return generate_html_page(f"Errore: {e}")
+        return JSONResponse({"result": f"Errore: {e}"})
 
 @app.get("/update-radar", response_class=HTMLResponse)
 def update_radar():
