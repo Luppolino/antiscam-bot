@@ -96,12 +96,10 @@ def call_gemini_api_native(prompt, image_path=None):
     if not GEMINI_API_KEY:
         return "⚠️ Errore: GEMINI_API_KEY non configurata."
     
-    # Utilizzo del modello stabile universale gemini-pro
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
+    # Lista di modelli da provare in sequenza per evitare errori 404
+    models_to_try = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-pro"]
     
     parts = [{"text": prompt}]
-    
-    # Se viene passata un'immagine, la gestiamo o la convertiamo in testo descrittivo per compatibilità con gemini-pro
     if image_path and os.path.exists(image_path):
         try:
             img = Image.open(image_path)
@@ -111,26 +109,34 @@ def call_gemini_api_native(prompt, image_path=None):
             
             with open(compressed_path, "rb") as image_file:
                 encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
-            
-            # Se gemini-pro accetta inline_data o se preferisci passarci l'immagine
             parts.append({"inline_data": {"mime_type": "image/jpeg", "data": encoded_string}})
             
             if os.path.exists(compressed_path):
                 os.remove(compressed_path)
         except Exception as e:
-            pass
+            return f"⚠️ Errore elaborazione immagine: {e}"
             
     payload = {"contents": [{"parts": parts}]}
-    req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={'Content-Type': 'application/json'})
+    data_bytes = json.dumps(payload).encode('utf-8')
     
-    try:
-        with urllib.request.urlopen(req, timeout=20) as response:
-            result = json.loads(response.read().decode())
-            return result["candidates"][0]["content"]["parts"][0]["text"]
-    except urllib.error.HTTPError as e:
-        return f"⚠️ Errore API Gemini: HTTP Error {e.code}: {e.reason}"
-    except Exception as e:
-        return f"⚠️ Errore API Gemini: {str(e)}"
+    last_error = ""
+    for model_name in models_to_try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
+        req = urllib.request.Request(url, data=data_bytes, headers={'Content-Type': 'application/json'})
+        try:
+            with urllib.request.urlopen(req, timeout=15) as response:
+                result = json.loads(response.read().decode())
+                return result["candidates"][0]["content"]["parts"][0]["text"]
+        except urllib.error.HTTPError as e:
+            last_error = f"HTTP Error {e.code}: {e.reason}"
+            if e.code in (404, 503):
+                continue  # Passa automaticamente al modello successivo
+            return f"⚠️ Errore API Gemini: {last_error}"
+        except Exception as e:
+            last_error = str(e)
+            continue
+            
+    return f"⚠️ Errore API Gemini: {last_error}"
 
 def perform_core_analysis(text_content=None, file_path=None):
     try:
