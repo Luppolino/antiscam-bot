@@ -96,7 +96,6 @@ def call_gemini_api_native(prompt, image_path=None):
     if not GEMINI_API_KEY:
         return "⚠️ Errore: GEMINI_API_KEY non configurata."
     
-    # Modelli aggiornati e raccomandati trovati nella tua chiave
     models_to_try = [
         "gemini-3.6-flash",
         "gemini-3.7-flash",
@@ -127,21 +126,28 @@ def call_gemini_api_native(prompt, image_path=None):
     for model_name in models_to_try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
         req = urllib.request.Request(url, data=data_bytes, headers={'Content-Type': 'application/json'})
-        try:
-            with urllib.request.urlopen(req, timeout=45) as response:
-                result = json.loads(response.read().decode())
-                return result["candidates"][0]["content"]["parts"][0]["text"]
-        except urllib.error.HTTPError as e:
-            error_body = e.read().decode()
-            last_error = f"HTTP {e.code}: {error_body}"
-            if e.code in (404, 503, 429):
+        
+        # Riprova automaticamente fino a 2 volte sullo stesso modello in caso di sovraccarico
+        for attempt in range(2):
+            try:
+                with urllib.request.urlopen(req, timeout=45) as response:
+                    result = json.loads(response.read().decode())
+                    return result["candidates"][0]["content"]["parts"][0]["text"]
+            except urllib.error.HTTPError as e:
+                error_body = e.read().decode()
+                last_error = f"HTTP {e.code}: {error_body}"
+                if e.code in (503, 429):
+                    time.sleep(2) # Pausa di 2 secondi e riprova
+                    continue
+                elif e.code == 404:
+                    break # Passa al modello successivo se non trovato
+                return f"⚠️ Errore API Gemini: {last_error}"
+            except Exception as e:
+                last_error = str(e)
+                time.sleep(1)
                 continue
-            return f"⚠️ Errore API Gemini: {last_error}"
-        except Exception as e:
-            last_error = str(e)
-            continue
             
-    return f"⚠️ Errore API Gemini (Tutti i modelli sono temporaneamente occupati o non disponibili): {last_error}"
+    return f"⚠️ Errore API Gemini (Tutti i modelli sono temporaneamente occupati): {last_error}"
 
 def perform_core_analysis(text_content=None, file_path=None):
     try:
