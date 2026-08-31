@@ -40,12 +40,9 @@ def load_scams_board():
         save_scams_board(DEFAULT_SCAMS)
     try:
         with open(BOARD_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            if isinstance(data, list) and len(data) > 0:
-                return data
+            return json.load(f)
     except Exception:
-        pass
-    return DEFAULT_SCAMS
+        return DEFAULT_SCAMS
 
 def save_scams_board(scams_list):
     try:
@@ -63,8 +60,7 @@ def check_and_auto_update_radar():
     else:
         try:
             with open(LAST_UPDATE_FILE, "r", encoding="utf-8") as f:
-                content = f.read().strip()
-                if content and time.time() - float(content) > UPDATE_INTERVAL:
+                if time.time() - float(f.read().strip()) > UPDATE_INTERVAL:
                     should_update = True
         except Exception:
             should_update = True
@@ -73,18 +69,10 @@ def check_and_auto_update_radar():
         try:
             prompt = 'Genera una lista di 3 truffe informatiche o phishing molto diffuse in Italia di recente. Restituisci SOLO un JSON puro (senza markdown) come lista di oggetti con chiavi: "risk" (🔴 o 🟡), "title" e "desc".'
             ai_response = call_gemini_api_native(prompt)
-            if not ai_response or ai_response.startswith("⚠️"):
-                return
-            
             clean_json = ai_response.strip()
             if clean_json.startswith("```json"): clean_json = clean_json[7:]
             if clean_json.endswith("```"): clean_json = clean_json[:-3]
-            clean_json = clean_json.strip()
-            
-            if not clean_json:
-                return
-
-            new_scams = json.loads(clean_json)
+            new_scams = json.loads(clean_json.strip())
             if isinstance(new_scams, list) and len(new_scams) > 0:
                 save_scams_board(new_scams)
         except Exception as e:
@@ -102,13 +90,11 @@ Analizza il messaggio o l'immagine e rispondi con 4 sezioni:
 def call_gemini_api_native(prompt, image_path=None):
     if not GEMINI_API_KEY:
         return "⚠️ Errore: GEMINI_API_KEY non configurata."
-    
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={GEMINI_API_KEY}"
     parts = [{"text": prompt}]
-    
     if image_path and os.path.exists(image_path):
-        compressed_path = None
         try:
+            # Comprimi/ridimensiona l'immagine al volo per renderla velocissima
             img = Image.open(image_path)
             img.thumbnail((1024, 1024))
             compressed_path = image_path + "_comp.jpg"
@@ -117,16 +103,17 @@ def call_gemini_api_native(prompt, image_path=None):
             with open(compressed_path, "rb") as image_file:
                 encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
             parts.append({"inline_data": {"mime_type": "image/jpeg", "data": encoded_string}})
+            
+            if os.path.exists(compressed_path):
+                os.remove(compressed_path)
         except Exception as e:
-            return f"⚠️ Errore elaborazione immagine: {e}"
-        finally:
-            if compressed_path and os.path.exists(compressed_path):
-                try: os.remove(compressed_path)
-                except: pass
+            return f"Errore elaborazione immagine: {e}"
             
     payload = {"contents": [{"parts": parts}]}
-    req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={'Content-Type': 'application/json'})
+    data_bytes = json.dumps(payload).encode('utf-8')
+    req = urllib.request.Request(url, data=data_bytes, headers={'Content-Type': 'application/json'})
     
+    # Sistema di tentativi automatici per aggirare i 503 temporanei di Google
     max_retries = 3
     for attempt in range(max_retries):
         try:
@@ -139,6 +126,9 @@ def call_gemini_api_native(prompt, image_path=None):
                 continue
             return f"⚠️ Errore API Gemini: HTTP Error {e.code}: {e.reason}"
         except Exception as e:
+            if attempt < max_retries - 1:
+                time.sleep(2)
+                continue
             return f"⚠️ Errore API Gemini: {str(e)}"
     return "⚠️ Errore API Gemini: Server temporaneamente non disponibile."
 
@@ -245,7 +235,7 @@ def generate_html_page(result_html=""):
 <button type="submit" id="submit-btn">Analizza con IA</button>
 <div id="loading-msg" style="display:none; text-align:center; margin-top:10px; color:#3182ce; font-weight:bold;">⏳ Attendere qualche secondo... Analisi in corso...</div>
 </form>
-<div id="result-box" class="result"><strong>Risultato:</strong><br><br>{result_html}</div>
+<div id="result-box" class="result">{ "<strong>Risultato:</strong><br><br>" + result_html if result_html else "" }</div>
 <div class="board">
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
 <h3 style="margin:0;">🚨 Ultime Truffe</h3>
@@ -279,48 +269,33 @@ def update_radar():
     try:
         prompt = 'Genera una lista di 3 truffe informatiche o phishing molto diffuse in Italia di recente. Restituisci SOLO un JSON puro (senza markdown) come lista di oggetti con chiavi: "risk" (🔴 o 🟡), "title" e "desc".'
         res = call_gemini_api_native(prompt)
-        if res and not res.startswith("⚠️"):
-            clean_json = res.strip()
-            if clean_json.startswith("```json"): clean_json = clean_json[7:]
-            if clean_json.endswith("```"): clean_json = clean_json[:-3]
-            clean_json = clean_json.strip()
-            if clean_json:
-                new_scams = json.loads(clean_json)
-                if isinstance(new_scams, list) and len(new_scams) > 0:
-                    save_scams_board(new_scams)
+        clean_json = res.strip()
+        if clean_json.startswith("```json"): clean_json = clean_json[7:]
+        if clean_json.endswith("```"): clean_json = clean_json[:-3]
+        new_scams = json.loads(clean_json.strip())
+        if isinstance(new_scams, list) and len(new_scams) > 0:
+            save_scams_board(new_scams)
     except Exception as e:
-        print(f"Errore aggiornamento manuale: {e}")
+        print(f"Errore aggiornamento: {e}")
     return generate_html_page("✅ Radar aggiornato con successo!")
 
 @app.post("/telegram")
 async def telegram_webhook(request: Request):
     try:
         data = await request.json()
-        if not data or "message" not in data: 
-            return {"status": "ok"}
-        
+        if "message" not in data: return {"status": "ok"}
         msg = data["message"]
         chat_id = msg["chat"]["id"]
-        
         if "text" in msg:
             send_telegram_message(chat_id, perform_core_analysis(text_content=msg["text"]))
         elif "photo" in msg:
             send_telegram_message(chat_id, "Ricevuto! Analisi in corso...")
             photo = msg["photo"][-1]
-            file_id = photo['file_id']
-            
-            file_info_url = f"https://api.telegram.org/bot{BOT_TOKEN}/getFile?file_id={file_id}"
-            with urllib.request.urlopen(file_info_url, timeout=10) as resp:
-                file_info = json.loads(resp.read().decode())
-                
-            if "result" in file_info and "file_path" in file_info["result"]:
-                file_path_tg = file_info["result"]["file_path"]
-                down_path = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path_tg}"
-                temp_path = f"/tmp/{file_id}.jpg"
-                urllib.request.urlretrieve(down_path, temp_path)
-                send_telegram_message(chat_id, perform_core_analysis(file_path=temp_path))
-            else:
-                send_telegram_message(chat_id, "⚠️ Impossibile scaricare l'immagine da Telegram.")
+            file_info = json.loads(urllib.request.urlopen(f"https://api.telegram.org/bot{BOT_TOKEN}/getFile?file_id={photo['file_id']}").read().decode())
+            down_path = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_info['result']['file_path']}"
+            temp_path = f"/tmp/{photo['file_id']}.jpg"
+            urllib.request.urlretrieve(down_path, temp_path)
+            send_telegram_message(chat_id, perform_core_analysis(file_path=temp_path))
     except Exception as e:
-        print(f"Errore Telegram Webhook: {e}")
+        print(f"Errore Telegram: {e}")
     return {"status": "ok"}
