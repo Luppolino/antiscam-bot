@@ -74,7 +74,7 @@ def check_and_auto_update_radar():
             prompt = 'Genera una lista di 3 truffe informatiche o phishing molto diffuse in Italia di recente. Restituisci SOLO un JSON puro (senza markdown) come lista di oggetti con chiavi: "risk" (🔴 o 🟡), "title" e "desc".'
             ai_response = call_gemini_api_native(prompt)
             if not ai_response or ai_response.startswith("⚠️"):
-                return  # Esce se c'è un errore API
+                return
             
             clean_json = ai_response.strip()
             if clean_json.startswith("```json"): clean_json = clean_json[7:]
@@ -102,6 +102,7 @@ Analizza il messaggio o l'immagine e rispondi con 4 sezioni:
 def call_gemini_api_native(prompt, image_path=None):
     if not GEMINI_API_KEY:
         return "⚠️ Errore: GEMINI_API_KEY non configurata."
+    
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
     parts = [{"text": prompt}]
     
@@ -299,7 +300,6 @@ async def telegram_webhook(request: Request):
             photo = msg["photo"][-1]
             file_id = photo['file_id']
             
-            # Recupera info file da telegram
             file_info_url = f"https://api.telegram.org/bot{BOT_TOKEN}/getFile?file_id={file_id}"
             with urllib.request.urlopen(file_info_url, timeout=10) as resp:
                 file_info = json.loads(resp.read().decode())
