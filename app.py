@@ -69,10 +69,15 @@ def check_and_auto_update_radar():
         try:
             prompt = 'Genera una lista di 3 truffe informatiche o phishing molto diffuse in Italia di recente. Restituisci SOLO un JSON puro (senza markdown) come lista di oggetti con chiavi: "risk" (🔴 o 🟡), "title" e "desc".'
             ai_response = call_gemini_api_native(prompt)
+            if not ai_response or ai_response.startswith("⚠️"):
+                return
             clean_json = ai_response.strip()
             if clean_json.startswith("```json"): clean_json = clean_json[7:]
             if clean_json.endswith("```"): clean_json = clean_json[:-3]
-            new_scams = json.loads(clean_json.strip())
+            clean_json = clean_json.strip()
+            if not clean_json:
+                return
+            new_scams = json.loads(clean_json)
             if isinstance(new_scams, list) and len(new_scams) > 0:
                 save_scams_board(new_scams)
         except Exception as e:
@@ -90,8 +95,10 @@ Analizza il messaggio o l'immagine e rispondi con 4 sezioni:
 def call_gemini_api_native(prompt, image_path=None):
     if not GEMINI_API_KEY:
         return "⚠️ Errore: GEMINI_API_KEY non configurata."
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     parts = [{"text": prompt}]
+    
     if image_path and os.path.exists(image_path):
         try:
             img = Image.open(image_path)
@@ -106,14 +113,21 @@ def call_gemini_api_native(prompt, image_path=None):
             if os.path.exists(compressed_path):
                 os.remove(compressed_path)
         except Exception as e:
-            return f"Errore elaborazione immagine: {e}"
+            return f"⚠️ Errore elaborazione immagine: {e}"
             
     payload = {"contents": [{"parts": parts}]}
-    req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={'Content-Type': 'application/json'})
+    headers = {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': GEMINI_API_KEY
+    }
+    req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers)
+    
     try:
-        with urllib.request.urlopen(req) as response:
+        with urllib.request.urlopen(req, timeout=15) as response:
             result = json.loads(response.read().decode())
             return result["candidates"][0]["content"]["parts"][0]["text"]
+    except urllib.error.HTTPError as e:
+        return f"⚠️ Errore API Gemini: HTTP Error {e.code}: {e.reason}"
     except Exception as e:
         return f"⚠️ Errore API Gemini: {str(e)}"
 
@@ -135,7 +149,7 @@ def send_telegram_message(chat_id, text):
     try:
         tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
         req = urllib.request.Request(tg_url, data=json.dumps({"chat_id": chat_id, "text": text}).encode('utf-8'), headers={'Content-Type': 'application/json'})
-        urllib.request.urlopen(req)
+        urllib.request.urlopen(req, timeout=10)
     except Exception as e:
         print(f"Errore Telegram: {e}")
 
@@ -254,12 +268,15 @@ def update_radar():
     try:
         prompt = 'Genera una lista di 3 truffe informatiche o phishing molto diffuse in Italia di recente. Restituisci SOLO un JSON puro (senza markdown) come lista di oggetti con chiavi: "risk" (🔴 o 🟡), "title" e "desc".'
         res = call_gemini_api_native(prompt)
-        clean_json = res.strip()
-        if clean_json.startswith("```json"): clean_json = clean_json[7:]
-        if clean_json.endswith("```"): clean_json = clean_json[:-3]
-        new_scams = json.loads(clean_json.strip())
-        if isinstance(new_scams, list) and len(new_scams) > 0:
-            save_scams_board(new_scams)
+        if res and not res.startswith("⚠️"):
+            clean_json = res.strip()
+            if clean_json.startswith("```json"): clean_json = clean_json[7:]
+            if clean_json.endswith("```"): clean_json = clean_json[:-3]
+            clean_json = clean_json.strip()
+            if clean_json:
+                new_scams = json.loads(clean_json)
+                if isinstance(new_scams, list) and len(new_scams) > 0:
+                    save_scams_board(new_scams)
     except Exception as e:
         print(f"Errore aggiornamento: {e}")
     return generate_html_page("✅ Radar aggiornato con successo!")
