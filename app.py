@@ -96,7 +96,7 @@ def call_gemini_api_native(prompt, image_path=None):
     if not GEMINI_API_KEY:
         return "⚠️ Errore: GEMINI_API_KEY non configurata."
     
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     parts = [{"text": prompt}]
     
     if image_path and os.path.exists(image_path):
@@ -116,11 +116,7 @@ def call_gemini_api_native(prompt, image_path=None):
             return f"⚠️ Errore elaborazione immagine: {e}"
             
     payload = {"contents": [{"parts": parts}]}
-    headers = {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': GEMINI_API_KEY
-    }
-    req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers)
+    req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={'Content-Type': 'application/json'})
     
     try:
         with urllib.request.urlopen(req, timeout=15) as response:
