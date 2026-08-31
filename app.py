@@ -118,7 +118,7 @@ def call_gemini_api_native(prompt, image_path=None):
                 encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
             parts.append({"inline_data": {"mime_type": "image/jpeg", "data": encoded_string}})
         except Exception as e:
-            return f"Errore elaborazione immagine: {e}"
+            return f"⚠️ Errore elaborazione immagine: {e}"
         finally:
             if compressed_path and os.path.exists(compressed_path):
                 try: os.remove(compressed_path)
@@ -126,12 +126,21 @@ def call_gemini_api_native(prompt, image_path=None):
             
     payload = {"contents": [{"parts": parts}]}
     req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={'Content-Type': 'application/json'})
-    try:
-        with urllib.request.urlopen(req, timeout=15) as response:
-            result = json.loads(response.read().decode())
-            return result["candidates"][0]["content"]["parts"][0]["text"]
-    except Exception as e:
-        return f"⚠️ Errore API Gemini: {str(e)}"
+    
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            with urllib.request.urlopen(req, timeout=15) as response:
+                result = json.loads(response.read().decode())
+                return result["candidates"][0]["content"]["parts"][0]["text"]
+        except urllib.error.HTTPError as e:
+            if e.code == 503 and attempt < max_retries - 1:
+                time.sleep(2)
+                continue
+            return f"⚠️ Errore API Gemini: HTTP Error {e.code}: {e.reason}"
+        except Exception as e:
+            return f"⚠️ Errore API Gemini: {str(e)}"
+    return "⚠️ Errore API Gemini: Server temporaneamente non disponibile."
 
 def perform_core_analysis(text_content=None, file_path=None):
     try:
