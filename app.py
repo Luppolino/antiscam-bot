@@ -90,7 +90,9 @@ Analizza il messaggio o l'immagine e rispondi con 4 sezioni:
 def call_gemini_api_native(prompt, image_path=None):
     if not GEMINI_API_KEY:
         return "⚠️ Errore: GEMINI_API_KEY non configurata."
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+    
+    models_to_try = ["gemini-3.6-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+    
     parts = [{"text": prompt}]
     if image_path and os.path.exists(image_path):
         try:
@@ -109,13 +111,26 @@ def call_gemini_api_native(prompt, image_path=None):
             return f"Errore elaborazione immagine: {e}"
             
     payload = {"contents": [{"parts": parts}]}
-    req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={'Content-Type': 'application/json'})
-    try:
-        with urllib.request.urlopen(req) as response:
-            result = json.loads(response.read().decode())
-            return result["candidates"][0]["content"]["parts"][0]["text"]
-    except Exception as e:
-        return f"⚠️ Errore API Gemini: {str(e)}"
+    data_bytes = json.dumps(payload).encode('utf-8')
+    
+    last_error = ""
+    for model_name in models_to_try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
+        req = urllib.request.Request(url, data=data_bytes, headers={'Content-Type': 'application/json'})
+        try:
+            with urllib.request.urlopen(req) as response:
+                result = json.loads(response.read().decode())
+                return result["candidates"][0]["content"]["parts"][0]["text"]
+        except urllib.error.HTTPError as e:
+            last_error = f"HTTP Error {e.code}: {e.reason}"
+            if e.code == 404:
+                continue
+            return f"⚠️ Errore API Gemini: {last_error}"
+        except Exception as e:
+            last_error = str(e)
+            break
+            
+    return f"⚠️ Errore API Gemini: {last_error}"
 
 def perform_core_analysis(text_content=None, file_path=None):
     try:
