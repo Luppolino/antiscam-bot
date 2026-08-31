@@ -96,11 +96,11 @@ def call_gemini_api_native(prompt, image_path=None):
     if not GEMINI_API_KEY:
         return "⚠️ Errore: GEMINI_API_KEY non configurata."
     
-    # Lista di fallback automatica basata sui modelli attivi sul tuo account
+    # Modelli aggiornati e raccomandati trovati nella tua chiave
     models_to_try = [
+        "gemini-3.6-flash",
         "gemini-3.7-flash",
-        "gemini-3.5-flash",
-        "gemini-2.5-flash"
+        "gemini-3.5-flash"
     ]
     
     parts = [{"text": prompt}]
@@ -135,13 +135,13 @@ def call_gemini_api_native(prompt, image_path=None):
             error_body = e.read().decode()
             last_error = f"HTTP {e.code}: {error_body}"
             if e.code in (404, 503, 429):
-                continue # Passa automaticamente al modello successivo
+                continue
             return f"⚠️ Errore API Gemini: {last_error}"
         except Exception as e:
             last_error = str(e)
             continue
             
-    return f"⚠️ Errore API Gemini (Tutti i modelli sono temporaneamente occupati): {last_error}"
+    return f"⚠️ Errore API Gemini (Tutti i modelli sono temporaneamente occupati o non disponibili): {last_error}"
 
 def perform_core_analysis(text_content=None, file_path=None):
     try:
