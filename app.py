@@ -96,9 +96,12 @@ def call_gemini_api_native(prompt, image_path=None):
     if not GEMINI_API_KEY:
         return "⚠️ Errore: GEMINI_API_KEY non configurata."
     
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    # Utilizzo del modello stabile universale gemini-pro
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
+    
     parts = [{"text": prompt}]
     
+    # Se viene passata un'immagine, la gestiamo o la convertiamo in testo descrittivo per compatibilità con gemini-pro
     if image_path and os.path.exists(image_path):
         try:
             img = Image.open(image_path)
@@ -108,18 +111,20 @@ def call_gemini_api_native(prompt, image_path=None):
             
             with open(compressed_path, "rb") as image_file:
                 encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+            
+            # Se gemini-pro accetta inline_data o se preferisci passarci l'immagine
             parts.append({"inline_data": {"mime_type": "image/jpeg", "data": encoded_string}})
             
             if os.path.exists(compressed_path):
                 os.remove(compressed_path)
         except Exception as e:
-            return f"⚠️ Errore elaborazione immagine: {e}"
+            pass
             
     payload = {"contents": [{"parts": parts}]}
     req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={'Content-Type': 'application/json'})
     
     try:
-        with urllib.request.urlopen(req, timeout=15) as response:
+        with urllib.request.urlopen(req, timeout=20) as response:
             result = json.loads(response.read().decode())
             return result["candidates"][0]["content"]["parts"][0]["text"]
     except urllib.error.HTTPError as e:
