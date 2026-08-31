@@ -96,9 +96,14 @@ def call_gemini_api_native(prompt, image_path=None):
     if not GEMINI_API_KEY:
         return "⚠️ Errore: GEMINI_API_KEY non configurata."
     
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent?key={GEMINI_API_KEY}"
-    parts = [{"text": prompt}]
+    # Lista di fallback automatica basata sui modelli attivi sul tuo account
+    models_to_try = [
+        "gemini-3.7-flash",
+        "gemini-3.5-flash",
+        "gemini-2.5-flash"
+    ]
     
+    parts = [{"text": prompt}]
     if image_path and os.path.exists(image_path):
         try:
             img = Image.open(image_path)
@@ -116,17 +121,27 @@ def call_gemini_api_native(prompt, image_path=None):
             return f"⚠️ Errore elaborazione immagine: {e}"
             
     payload = {"contents": [{"parts": parts}]}
-    req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={'Content-Type': 'application/json'})
+    data_bytes = json.dumps(payload).encode('utf-8')
     
-    try:
-        with urllib.request.urlopen(req, timeout=45) as response:
-            result = json.loads(response.read().decode())
-            return result["candidates"][0]["content"]["parts"][0]["text"]
-    except urllib.error.HTTPError as e:
-        error_body = e.read().decode()
-        return f"⚠️ Errore API Gemini (HTTP {e.code}): {error_body}"
-    except Exception as e:
-        return f"⚠️ Errore API Gemini: {str(e)}"
+    last_error = ""
+    for model_name in models_to_try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
+        req = urllib.request.Request(url, data=data_bytes, headers={'Content-Type': 'application/json'})
+        try:
+            with urllib.request.urlopen(req, timeout=45) as response:
+                result = json.loads(response.read().decode())
+                return result["candidates"][0]["content"]["parts"][0]["text"]
+        except urllib.error.HTTPError as e:
+            error_body = e.read().decode()
+            last_error = f"HTTP {e.code}: {error_body}"
+            if e.code in (404, 503, 429):
+                continue # Passa automaticamente al modello successivo
+            return f"⚠️ Errore API Gemini: {last_error}"
+        except Exception as e:
+            last_error = str(e)
+            continue
+            
+    return f"⚠️ Errore API Gemini (Tutti i modelli sono temporaneamente occupati): {last_error}"
 
 def perform_core_analysis(text_content=None, file_path=None):
     try:
