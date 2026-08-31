@@ -69,15 +69,10 @@ def check_and_auto_update_radar():
         try:
             prompt = 'Genera una lista di 3 truffe informatiche o phishing molto diffuse in Italia di recente. Restituisci SOLO un JSON puro (senza markdown) come lista di oggetti con chiavi: "risk" (🔴 o 🟡), "title" e "desc".'
             ai_response = call_gemini_api_native(prompt)
-            if not ai_response or ai_response.startswith("⚠️"):
-                return
             clean_json = ai_response.strip()
             if clean_json.startswith("```json"): clean_json = clean_json[7:]
             if clean_json.endswith("```"): clean_json = clean_json[:-3]
-            clean_json = clean_json.strip()
-            if not clean_json:
-                return
-            new_scams = json.loads(clean_json)
+            new_scams = json.loads(clean_json.strip())
             if isinstance(new_scams, list) and len(new_scams) > 0:
                 save_scams_board(new_scams)
         except Exception as e:
@@ -95,10 +90,7 @@ Analizza il messaggio o l'immagine e rispondi con 4 sezioni:
 def call_gemini_api_native(prompt, image_path=None):
     if not GEMINI_API_KEY:
         return "⚠️ Errore: GEMINI_API_KEY non configurata."
-    
-    # Prova prima il modello principale e, in caso di errore server (503/404), scala sui fallback stabili
-    models_to_try = ["gemini-3.6-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
-    
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     parts = [{"text": prompt}]
     if image_path and os.path.exists(image_path):
         try:
@@ -114,29 +106,16 @@ def call_gemini_api_native(prompt, image_path=None):
             if os.path.exists(compressed_path):
                 os.remove(compressed_path)
         except Exception as e:
-            return f"⚠️ Errore elaborazione immagine: {e}"
+            return f"Errore elaborazione immagine: {e}"
             
     payload = {"contents": [{"parts": parts}]}
-    data_bytes = json.dumps(payload).encode('utf-8')
-    
-    last_error = ""
-    for model_name in models_to_try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
-        req = urllib.request.Request(url, data=data_bytes, headers={'Content-Type': 'application/json'})
-        try:
-            with urllib.request.urlopen(req, timeout=15) as response:
-                result = json.loads(response.read().decode())
-                return result["candidates"][0]["content"]["parts"][0]["text"]
-        except urllib.error.HTTPError as e:
-            last_error = f"HTTP Error {e.code}: {e.reason}"
-            if e.code in (404, 503):
-                continue # Passa al modello successivo se il server dà errore o non lo trova
-            return f"⚠️ Errore API Gemini: {last_error}"
-        except Exception as e:
-            last_error = str(e)
-            continue
-            
-    return f"⚠️ Errore API Gemini: {last_error}"
+    req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={'Content-Type': 'application/json'})
+    try:
+        with urllib.request.urlopen(req) as response:
+            result = json.loads(response.read().decode())
+            return result["candidates"][0]["content"]["parts"][0]["text"]
+    except Exception as e:
+        return f"⚠️ Errore API Gemini: {str(e)}"
 
 def perform_core_analysis(text_content=None, file_path=None):
     try:
@@ -156,7 +135,7 @@ def send_telegram_message(chat_id, text):
     try:
         tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
         req = urllib.request.Request(tg_url, data=json.dumps({"chat_id": chat_id, "text": text}).encode('utf-8'), headers={'Content-Type': 'application/json'})
-        urllib.request.urlopen(req, timeout=10)
+        urllib.request.urlopen(req)
     except Exception as e:
         print(f"Errore Telegram: {e}")
 
@@ -275,15 +254,12 @@ def update_radar():
     try:
         prompt = 'Genera una lista di 3 truffe informatiche o phishing molto diffuse in Italia di recente. Restituisci SOLO un JSON puro (senza markdown) come lista di oggetti con chiavi: "risk" (🔴 o 🟡), "title" e "desc".'
         res = call_gemini_api_native(prompt)
-        if res and not res.startswith("⚠️"):
-            clean_json = res.strip()
-            if clean_json.startswith("```json"): clean_json = clean_json[7:]
-            if clean_json.endswith("```"): clean_json = clean_json[:-3]
-            clean_json = clean_json.strip()
-            if clean_json:
-                new_scams = json.loads(clean_json)
-                if isinstance(new_scams, list) and len(new_scams) > 0:
-                    save_scams_board(new_scams)
+        clean_json = res.strip()
+        if clean_json.startswith("```json"): clean_json = clean_json[7:]
+        if clean_json.endswith("```"): clean_json = clean_json[:-3]
+        new_scams = json.loads(clean_json.strip())
+        if isinstance(new_scams, list) and len(new_scams) > 0:
+            save_scams_board(new_scams)
     except Exception as e:
         print(f"Errore aggiornamento: {e}")
     return generate_html_page("✅ Radar aggiornato con successo!")
