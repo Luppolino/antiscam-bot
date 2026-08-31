@@ -90,11 +90,10 @@ Analizza il messaggio o l'immagine e rispondi con 4 sezioni:
 def call_gemini_api_native(prompt, image_path=None):
     if not GEMINI_API_KEY:
         return "⚠️ Errore: GEMINI_API_KEY non configurata."
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     parts = [{"text": prompt}]
     if image_path and os.path.exists(image_path):
         try:
-            # Comprimi/ridimensiona l'immagine al volo per renderla velocissima
             img = Image.open(image_path)
             img.thumbnail((1024, 1024))
             compressed_path = image_path + "_comp.jpg"
@@ -110,27 +109,13 @@ def call_gemini_api_native(prompt, image_path=None):
             return f"Errore elaborazione immagine: {e}"
             
     payload = {"contents": [{"parts": parts}]}
-    data_bytes = json.dumps(payload).encode('utf-8')
-    req = urllib.request.Request(url, data=data_bytes, headers={'Content-Type': 'application/json'})
-    
-    # Sistema di tentativi automatici per aggirare i 503 temporanei di Google
-    max_retries = 3
-    for attempt in range(max_retries):
-        try:
-            with urllib.request.urlopen(req, timeout=15) as response:
-                result = json.loads(response.read().decode())
-                return result["candidates"][0]["content"]["parts"][0]["text"]
-        except urllib.error.HTTPError as e:
-            if e.code == 503 and attempt < max_retries - 1:
-                time.sleep(2)
-                continue
-            return f"⚠️ Errore API Gemini: HTTP Error {e.code}: {e.reason}"
-        except Exception as e:
-            if attempt < max_retries - 1:
-                time.sleep(2)
-                continue
-            return f"⚠️ Errore API Gemini: {str(e)}"
-    return "⚠️ Errore API Gemini: Server temporaneamente non disponibile."
+    req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={'Content-Type': 'application/json'})
+    try:
+        with urllib.request.urlopen(req) as response:
+            result = json.loads(response.read().decode())
+            return result["candidates"][0]["content"]["parts"][0]["text"]
+    except Exception as e:
+        return f"⚠️ Errore API Gemini: {str(e)}"
 
 def perform_core_analysis(text_content=None, file_path=None):
     try:
@@ -150,7 +135,7 @@ def send_telegram_message(chat_id, text):
     try:
         tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
         req = urllib.request.Request(tg_url, data=json.dumps({"chat_id": chat_id, "text": text}).encode('utf-8'), headers={'Content-Type': 'application/json'})
-        urllib.request.urlopen(req, timeout=10)
+        urllib.request.urlopen(req)
     except Exception as e:
         print(f"Errore Telegram: {e}")
 
