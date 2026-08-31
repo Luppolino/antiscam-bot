@@ -96,7 +96,8 @@ def call_gemini_api_native(prompt, image_path=None):
     if not GEMINI_API_KEY:
         return "⚠️ Errore: GEMINI_API_KEY non configurata."
     
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    # Endpoint corretto v1beta per gemini-1.5-flash
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     parts = [{"text": prompt}]
     
     if image_path and os.path.exists(image_path):
@@ -124,7 +125,6 @@ def call_gemini_api_native(prompt, image_path=None):
             return result["candidates"][0]["content"]["parts"][0]["text"]
     except urllib.error.HTTPError as e:
         error_body = e.read().decode()
-        print(f"Dettaglio errore Google API: {error_body}")
         return f"⚠️ Errore API Gemini (HTTP {e.code}): {error_body}"
     except Exception as e:
         return f"⚠️ Errore API Gemini: {str(e)}"
