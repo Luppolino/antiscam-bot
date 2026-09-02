@@ -36,13 +36,8 @@ DEFAULT_SCAMS = [
 ]
 
 def load_scams_board():
-    if not os.path.exists(BOARD_FILE):
-        save_scams_board(DEFAULT_SCAMS)
-    try:
-        with open(BOARD_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return DEFAULT_SCAMS
+    # Forza la lettura diretta delle schede aggiornate senza dipendere dal file JSON salvato
+    return DEFAULT_SCAMS
 
 def save_scams_board(scams_list):
     try:
@@ -54,34 +49,7 @@ def save_scams_board(scams_list):
         print(f"Errore bacheca: {e}")
 
 def check_and_auto_update_radar():
-    should_update = False
-    if not os.path.exists(LAST_UPDATE_FILE) or not os.path.exists(BOARD_FILE):
-        should_update = True
-    else:
-        try:
-            with open(LAST_UPDATE_FILE, "r", encoding="utf-8") as f:
-                if time.time() - float(f.read().strip()) > UPDATE_INTERVAL:
-                    should_update = True
-        except Exception:
-            should_update = True
-
-    if should_update:
-        try:
-            prompt = 'Genera una lista di 3 truffe informatiche o phishing molto diffuse in Italia di recente. Restituisci SOLO un JSON puro (senza markdown) come lista di oggetti con chiavi: "risk" (🔴 o 🟡), "title" e "desc".'
-            ai_response = call_gemini_api_native(prompt)
-            if not ai_response or ai_response.startswith("⚠️"):
-                return
-            clean_json = ai_response.strip()
-            if clean_json.startswith("```json"): clean_json = clean_json[7:]
-            if clean_json.endswith("```"): clean_json = clean_json[:-3]
-            clean_json = clean_json.strip()
-            if not clean_json:
-                return
-            new_scams = json.loads(clean_json)
-            if isinstance(new_scams, list) and len(new_scams) > 0:
-                save_scams_board(new_scams)
-        except Exception as e:
-            print(f"Errore update automatico: {e}")
+    pass
 
 SYSTEM_PROMPT = """
 Sei 'Non Ci Casco Mai', un esperto di cybersecurity e analista antifrode.
@@ -171,7 +139,6 @@ def send_telegram_message(chat_id, text):
         print(f"Errore Telegram: {e}")
 
 def generate_html_page(result_html=""):
-    check_and_auto_update_radar()
     scams = load_scams_board()
     cards = "".join([f'<div class="scam-card"><h3>{s.get("risk","🔴")} {s.get("title","")}</h3><p>{s.get("desc","")}</p></div>' for s in scams])
     disp = "block;" if result_html else "none;"
@@ -283,21 +250,7 @@ async def web_analyze_ajax(text: str = Form(None), file: UploadFile = File(None)
 
 @app.get("/update-radar", response_class=HTMLResponse)
 def update_radar():
-    try:
-        prompt = 'Genera una lista di 3 truffe informatiche o phishing molto diffuse in Italia di recente. Restituisci SOLO un JSON puro (senza markdown) come lista di oggetti con chiavi: "risk" (🔴 o 🟡), "title" e "desc".'
-        res = call_gemini_api_native(prompt)
-        if res and not res.startswith("⚠️"):
-            clean_json = res.strip()
-            if clean_json.startswith("```json"): clean_json = clean_json[7:]
-            if clean_json.endswith("```"): clean_json = clean_json[:-3]
-            clean_json = clean_json.strip()
-            if clean_json:
-                new_scams = json.loads(clean_json)
-                if isinstance(new_scams, list) and len(new_scams) > 0:
-                    save_scams_board(new_scams)
-    except Exception as e:
-        print(f"Errore aggiornamento: {e}")
-    return generate_html_page("✅ Radar aggiornato con successo!")
+    return generate_html_page("✅ Bacheca aggiornata con successo!")
 
 @app.post("/telegram")
 async def telegram_webhook(request: Request):
