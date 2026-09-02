@@ -6,50 +6,16 @@ import base64
 import time
 from fastapi import FastAPI, Request, Form, File, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
 from PIL import Image
 
 app = FastAPI()
 
+# Configurazione del motore per leggere il file index.html esterno
+templates = Jinja2Templates(directory=".")
+
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
-
-BOARD_FILE = "scams_board.json"
-LAST_UPDATE_FILE = "last_update.txt"
-UPDATE_INTERVAL = 3600
-
-DEFAULT_SCAMS = [
-    {
-        "risk": "🔴",
-        "title": "La Truffa del Finto Pacco Nexi",
-        "desc": "SMS fraudolenti che segnalano un pacco bloccato o in giacenza a nome Nexi, con link che imitano i canali ufficiali e puntano a svuotare la carta di credito."
-    },
-    {
-        "risk": "🔴",
-        "title": "Finti SMS 'Poste Info'",
-        "desc": "Messaggi ingannevoli camuffati da comunicazioni ufficiali Poste Info o BancoPosta, che parlano di transazioni sospette o blocchi temporanei del conto."
-    },
-    {
-        "risk": "🟡",
-        "title": "Finto rimborso INPS / Agenzia Entrate",
-        "desc": "Comunicazione urgente che promette un rimborso fiscale immediato."
-    }
-]
-
-def load_scams_board():
-    # Forza la lettura diretta delle schede aggiornate senza dipendere dal file JSON salvato
-    return DEFAULT_SCAMS
-
-def save_scams_board(scams_list):
-    try:
-        with open(BOARD_FILE, "w", encoding="utf-8") as f:
-            json.dump(scams_list, f, ensure_ascii=False, indent=4)
-        with open(LAST_UPDATE_FILE, "w", encoding="utf-8") as f:
-            f.write(str(time.time()))
-    except Exception as e:
-        print(f"Errore bacheca: {e}")
-
-def check_and_auto_update_radar():
-    pass
 
 SYSTEM_PROMPT = """
 Sei 'Non Ci Casco Mai', un esperto di cybersecurity e analista antifrode.
@@ -138,119 +104,26 @@ def send_telegram_message(chat_id, text):
     except Exception as e:
         print(f"Errore Telegram: {e}")
 
-def generate_html_page(result_html=""):
-    scams = load_scams_board()
-    cards = "".join([f'<div class="scam-card"><h3>{s.get("risk","🔴")} {s.get("title","")}</h3><p>{s.get("desc","")}</p></div>' for s in scams])
-    disp = "block;" if result_html else "none;"
-    
-    return f"""<!DOCTYPE html>
-<html lang="it">
-<head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-H698KT76PV"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){{dataLayer.push(arguments);}}
-      gtag('js', new Date());
-
-      gtag('config', 'G-H698KT76PV');
-    </script>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Non Ci Casco Mai | Verifica Truffe SMS, Pacco Nexi e Poste Info</title>
-    <meta name="description" content="Verifica gratis truffe SMS, finti pacchi Nexi, allerte Poste Info e phishing online con Non Ci Casco Mai. Incolla il testo o l'immagine per scoprire se è una frode.">
-    <style>
-    body {{ font-family: sans-serif; background: #f4f7f6; margin: 0; padding: 20px; display: flex; justify-content: center; }}
-    .container {{ max-width: 700px; width: 100%; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }}
-    h1 {{ color: #1a365d; text-align: center; }}
-    textarea, input[type="file"] {{ width: 100%; padding: 10px; margin-bottom: 15px; box-sizing: border-box; border-radius: 6px; border: 1px solid #ccc; }}
-    textarea {{ height: 90px; }}
-    button {{ background: #3182ce; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; }}
-    .result {{ margin-top: 20px; background: #edf2f7; padding: 15px; border-radius: 6px; white-space: pre-wrap; display: {disp}; border-left: 5px solid #3182ce; }}
-    .board {{ margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }}
-    .scam-card {{ background: #fff5f5; border: 1px solid #feb2b2; border-left: 5px solid #e53e3e; padding: 12px; border-radius: 6px; margin-bottom: 10px; }}
-    .scam-card h3 {{ margin: 0 0 5px 0; color: #c53030; font-size: 15px; }}
-    .scam-card p {{ margin: 0; font-size: 13px; color: #4a5568; }}
-    .btn-up {{ background: #38a169; width: auto; padding: 6px 12px; font-size: 13px; }}
-    </style>
-    <script>
-    async function sendAnalysis(event) {{
-        event.preventDefault();
-        var btn = document.getElementById('submit-btn');
-        var loadingMsg = document.getElementById('loading-msg');
-        var resultBox = document.getElementById('result-box');
-        
-        btn.disabled = true;
-        btn.style.opacity = '0.6';
-        btn.innerText = '⏳ Analisi in corso...';
-        loadingMsg.style.display = 'block';
-        resultBox.style.display = 'none';
-
-        var formData = new FormData(document.getElementById('analysis-form'));
-
-        try {{
-            let response = await fetch('/analyze-ajax', {{
-                method: 'POST',
-                body: formData
-            }});
-            let data = await response.json();
-            
-            resultBox.innerHTML = '<strong>Risultato:</strong><br><br>' + data.result;
-            resultBox.style.display = 'block';
-        }} catch (error) {{
-            resultBox.innerHTML = '<strong>Errore di connessione. Riprova.</strong>';
-            resultBox.style.display = 'block';
-        }} finally {{
-            btn.disabled = false;
-            btn.style.opacity = '1';
-            btn.innerText = 'Analizza con IA';
-            loadingMsg.style.display = 'none';
-        }}
-    }}
-    </script>
-</head>
-<body>
-<div class="container">
-<h1>Non Ci Casco Mai 🛡️</h1>
-<form id="analysis-form" onsubmit="sendAnalysis(event)">
-<label>Incolla messaggio o link:</label>
-<textarea name="text" placeholder="Es. Pacco bloccato..."></textarea>
-<label>Oppure carica screenshot:</label>
-<input type="file" name="file" accept="image/*">
-<button type="submit" id="submit-btn">Analizza con IA</button>
-<div id="loading-msg" style="display:none; text-align:center; margin-top:10px; color:#3182ce; font-weight:bold;">⏳ Attendere qualche secondo... Analisi in corso...</div>
-</form>
-<div id="result-box" class="result">{ "<strong>Risultato:</strong><br><br>" + result_html if result_html else "" }</div>
-<div class="board">
-<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-<h3 style="margin:0;">🚨 Ultime Truffe</h3>
-<form action="/update-radar" method="get" style="margin:0;"><button type="submit" class="btn-up">🔄 Aggiorna</button></form>
-</div>
-{cards}
-</div>
-</div>
-</body>
-</html>"""
-
 @app.get("/", response_class=HTMLResponse)
-def read_root():
-    return generate_html_page("")
+def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
-@app.post("/analyze-ajax")
-async def web_analyze_ajax(text: str = Form(None), file: UploadFile = File(None)):
-    temp_path = None
+@app.post("/analizza")
+async def web_analizza(data: dict):
     try:
-        if file and file.filename:
-            temp_path = f"/tmp/{file.filename}"
-            with open(temp_path, "wb") as buffer:
-                buffer.write(await file.read())
+        text = data.get("testo")
+        image_base64 = data.get("image")
+        temp_path = None
+        
+        if image_base64:
+            temp_path = "/tmp/upload_img.jpg"
+            with open(temp_path, "wb") as fh:
+                fh.write(base64.b64decode(image_base64))
+                
         res = perform_core_analysis(text_content=text, file_path=temp_path)
-        return JSONResponse({"result": res})
+        return JSONResponse({"risultato": res})
     except Exception as e:
-        return JSONResponse({"result": f"Errore: {e}"})
-
-@app.get("/update-radar", response_class=HTMLResponse)
-def update_radar():
-    return generate_html_page("✅ Bacheca aggiornata con successo!")
+        return JSONResponse({"errore": str(e)})
 
 @app.post("/telegram")
 async def telegram_webhook(request: Request):
