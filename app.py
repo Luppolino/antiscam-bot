@@ -100,6 +100,15 @@ def send_telegram_message(chat_id, text):
     except Exception as e:
         print(f"Errore Telegram: {e}")
 
+# Rotta principale che carica la pagina web leggendo il file HTML dalla cartella templates
+@app.get("/", response_class=HTMLResponse)
+def read_root():
+    try:
+        with open("templates/index.html", "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception as e:
+        return f"<h1>Errore caricamento template: {e}</h1>"
+
 @app.post("/analizza")
 async def web_analizza(data: dict):
     try:
