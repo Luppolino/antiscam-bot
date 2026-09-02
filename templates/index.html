@@ -20,7 +20,39 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            scroll-behavior: smooth; /* Abilita lo scorrimento fluido */
         }
+        
+        /* Barra di navigazione superiore */
+        .navbar {
+            max-width: 650px;
+            width: 100%;
+            background: #ffffff;
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+        .navbar a {
+            text-decoration: none;
+            color: #007bff;
+            font-size: 13px;
+            font-weight: bold;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: #e7f1ff;
+            transition: background 0.2s, color 0.2s;
+        }
+        .navbar a:hover {
+            background: #007bff;
+            color: white;
+        }
+
         .container {
             max-width: 650px;
             width: 100%;
@@ -111,8 +143,17 @@
 </head>
 <body>
 
+    <!-- BARRA DI NAVIGAZIONE RAPIDA -->
+    <div class="navbar">
+        <a href="#verifica">🔍 Verifica</a>
+        <a href="#truffe">🚨 Truffe</a>
+        <a href="#progetto">💡 Progetto</a>
+        <a href="#newsletter">📬 Newsletter</a>
+        <a href="#contatti">✉️ Contatti</a>
+    </div>
+
     <!-- STRUMENTO DI VERIFICA -->
-    <div class="container">
+    <div class="container" id="verifica">
         <h1>🛡️ Non Ci Casco Mai</h1>
         <p class="subtitle">Incolla un testo, una chat o carica uno screenshot per analizzare subito qualsiasi rischio di frode.</p>
         
@@ -129,7 +170,7 @@
     </div>
 
     <!-- BACHECA DELLE TRUFFE DEL MOMENTO -->
-    <div class="container">
+    <div class="container" id="truffe">
         <h2>🚨 Truffe del Momento in Italia</h2>
         <p class="subtitle">Le allerte più segnalate per riconoscere phishing e raggiri commerciali.</p>
 
@@ -173,17 +214,17 @@
     <div class="container">
         <h2>ℹ️ Informazioni & Contatti</h2>
         
-        <div class="info-box">
+        <div class="info-box" id="progetto">
             <h3>💡 Il Progetto</h3>
             <p><strong>Non Ci Casco Mai</strong> nasce per proteggere gli utenti dalle truffe digitali quotidiane. Sfruttando un'avanzata intelligenza artificiale di analisi antifrode, il sistema individua trappole, leve psicologiche e link di phishing in pochi secondi.</p>
         </div>
 
-        <div class="info-box">
+        <div class="info-box" id="newsletter">
             <h3>📬 Newsletter & Aggiornamenti</h3>
             <p>Rimani informato sulle nuove tipologie di frode che circolano in Italia. Puoi consultare regolarmente questa bacheca o testare subito qualsiasi messaggio sospetto.</p>
         </div>
 
-        <div class="info-box">
+        <div class="info-box" id="contatti">
             <h3>✉️ Contatti & Segnalazioni</h3>
             <p>Hai riscontrato una nuova truffa o vuoi inviarci una segnalazione? Puoi contattarci direttamente via email all'indirizzo: <br><a href="mailto:noncicascomai@gmail.com"><strong>noncicascomai@gmail.com</strong></a></p>
         </div>
