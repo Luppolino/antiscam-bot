@@ -58,7 +58,6 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Stile grafico migliorato e d'impatto per il box dei risultati */
         #risultato {
             margin-top: 25px; 
             padding: 20px; 
@@ -92,6 +91,19 @@
         .alert-card p { margin: 0; color: #555; line-height: 1.4; }
         .category-grid { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
         .cat-item { background: #e7f1ff; color: #007bff; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        
+        .info-box {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #555;
+            line-height: 1.5;
+            margin-top: 15px;
+        }
+        .info-box h3 { font-size: 16px; color: #1a1a1a; margin-top: 0; margin-bottom: 8px; }
+        
         .seo-section {
             margin-top: 30px; font-size: 13px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 20px;
         }
@@ -157,6 +169,26 @@
         </div>
     </div>
 
+    <!-- SEZIONE PROGETTO, NEWSLETTER E CONTATTI -->
+    <div class="container">
+        <h2>ℹ️ Informazioni & Contatti</h2>
+        
+        <div class="info-box">
+            <h3>💡 Il Progetto</h3>
+            <p><strong>Non Ci Casco Mai</strong> nasce per proteggere gli utenti dalle truffe digitali quotidiane. Sfruttando un'avanzata intelligenza artificiale di analisi antifrode, il sistema individua trappole, leve psicologiche e link di phishing in pochi secondi.</p>
+        </div>
+
+        <div class="info-box">
+            <h3>📬 Newsletter & Aggiornamenti</h3>
+            <p>Rimani informato sulle nuove tipologie di frode che circolano in Italia. Puoi consultare regolarmente questa bacheca o testare subito qualsiasi messaggio sospetto.</p>
+        </div>
+
+        <div class="info-box">
+            <h3>✉️ Contatti & Segnalazioni</h3>
+            <p>Hai riscontrato una nuova truffa o vuoi inviarci un feedback? Puoi contattarci direttamente via email all'indirizzo: <br><strong>tuamail@dominio.it</strong> (sostituisci con la tua email).</p>
+        </div>
+    </div>
+
     <div class="container seo-section">
         <h3>Protezione digitale a 360 gradi con Non Ci Casco Mai</h3>
         <p>Usa il nostro <strong>verificatore phishing online</strong> per bloccare tentativi di frode e comprare in totale sicurezza.</p>
@@ -208,7 +240,6 @@
                 if (data.errore) {
                     divRisultato.innerHTML = '<span style="color: red;">Errore: ' + data.errore + '</span>';
                 } else {
-                    // Converte il testo grezzo dell'IA in HTML formattato ed elegante con il nuovo stile
                     divRisultato.innerHTML = marked.parse(data.risultato);
                 }
             } catch (error) {
