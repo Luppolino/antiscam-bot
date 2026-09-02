@@ -20,18 +20,18 @@ UPDATE_INTERVAL = 3600
 DEFAULT_SCAMS = [
     {
         "risk": "🔴",
-        "title": "Finto SMS Poste / Corriere",
-        "desc": "Messaggio con link anomalo che avvisa di un finto pacco bloccato in giacenza."
+        "title": "La Truffa del Finto Pacco Nexi",
+        "desc": "SMS fraudolenti che segnalano un pacco bloccato o in giacenza a nome Nexi, con link che imitano i canali ufficiali e puntano a svuotare la carta di credito."
+    },
+    {
+        "risk": "🔴",
+        "title": "Finti SMS 'Poste Info'",
+        "desc": "Messaggi ingannevoli camuffati da comunicazioni ufficiali Poste Info o BancoPosta, che parlano di transazioni sospette o blocchi temporanei del conto."
     },
     {
         "risk": "🟡",
         "title": "Finto rimborso INPS / Agenzia Entrate",
         "desc": "Comunicazione urgente che promette un rimborso fiscale immediato."
-    },
-    {
-        "risk": "🔴",
-        "title": "Phishing Account Streaming",
-        "desc": "Avviso di blocco imminente dell'abbonamento per problemi di pagamento."
     }
 ]
 
@@ -127,7 +127,6 @@ def call_gemini_api_native(prompt, image_path=None):
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
         req = urllib.request.Request(url, data=data_bytes, headers={'Content-Type': 'application/json'})
         
-        # Riprova automaticamente fino a 2 volte sullo stesso modello in caso di sovraccarico
         for attempt in range(2):
             try:
                 with urllib.request.urlopen(req, timeout=45) as response:
@@ -137,10 +136,10 @@ def call_gemini_api_native(prompt, image_path=None):
                 error_body = e.read().decode()
                 last_error = f"HTTP {e.code}: {error_body}"
                 if e.code in (503, 429):
-                    time.sleep(2) # Pausa di 2 secondi e riprova
+                    time.sleep(2)
                     continue
                 elif e.code == 404:
-                    break # Passa al modello successivo se non trovato
+                    break
                 return f"⚠️ Errore API Gemini: {last_error}"
             except Exception as e:
                 last_error = str(e)
@@ -190,7 +189,8 @@ def generate_html_page(result_html=""):
       gtag('config', 'G-H698KT76PV');
     </script>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Non Ci Casco Mai</title>
+    <title>Non Ci Casco Mai | Verifica Truffe SMS, Pacco Nexi e Poste Info</title>
+    <meta name="description" content="Verifica gratis truffe SMS, finti pacchi Nexi, allerte Poste Info e phishing online con Non Ci Casco Mai. Incolla il testo o l'immagine per scoprire se è una frode.">
     <style>
     body {{ font-family: sans-serif; background: #f4f7f6; margin: 0; padding: 20px; display: flex; justify-content: center; }}
     .container {{ max-width: 700px; width: 100%; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }}
