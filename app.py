@@ -11,8 +11,8 @@ from PIL import Image
 
 app = FastAPI()
 
-# Configurazione del motore per leggere il file index.html esterno
-templates = Jinja2Templates(directory=".")
+# Configurazione corretta che punta alla cartella "templates"
+templates = Jinja2Templates(directory="templates")
 
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
