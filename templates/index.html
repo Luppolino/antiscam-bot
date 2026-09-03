@@ -1,3 +1,235 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Non Ci Casco Mai - Assistente Antifrode</title>
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success-bg: #f0fdf4;
+            --success-border: #bbf7d0;
+            --success-text: #166534;
+            --warning-bg: #fefce8;
+            --warning-border: #fef08a;
+            --warning-text: #854d0e;
+            --danger-bg: #fef2f2;
+            --danger-border: #fecaca;
+            --danger-text: #991b1b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            margin-top: 20px;
+            margin-bottom: 40px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        header p {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        textarea {
+            width: 100%;
+            height: 130px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            border-color: var(--primary);
+        }
+
+        .file-input-wrapper {
+            margin-bottom: 20px;
+        }
+
+        input[type="file"] {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        button {
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button:disabled {
+            background-color: var(--border-color);
+            cursor: not-allowed;
+        }
+
+        #loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        #result {
+            margin-top: 25px;
+            display: none;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+        }
+
+        /* Stili dinamici in base al rischio */
+        .risk-basso {
+            background-color: var(--success-bg);
+            border-color: var(--success-border);
+            color: var(--success-text);
+        }
+
+        .risk-medio {
+            background-color: var(--warning-bg);
+            border-color: var(--warning-border);
+            color: var(--warning-text);
+        }
+
+        .risk-alto {
+            background-color: var(--danger-bg);
+            border-color: var(--danger-border);
+            color: var(--danger-text);
+        }
+
+        #result h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        #result p {
+            font-size: 14px;
+            white-space: pre-line;
+        }
+
+        .info-box {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .info-box h3 {
+            font-size: 15px;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        .info-box p {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>🛡️ Non Ci Casco Mai</h1>
+            <p>Incolla il testo di un messaggio sospetto o carica uno screenshot per verificare se si tratta di una truffa.</p>
+        </header>
+
+        <form id="fraudForm">
+            <div class="form-group">
+                <label for="messageText">Testo del messaggio sospetto:</label>
+                <textarea id="messageText" name="text" placeholder="Es: 'Gentile cliente, il suo conto è bloccato, clicca qui per sbloccarlo...'"></textarea>
+            </div>
+
+            <div class="form-group file-input-wrapper">
+                <label for="imageFile">Oppure carica uno screenshot (opzionale):</label>
+                <input type="file" id="imageFile" name="image" accept="image/*">
+            </div>
+
+            <button type="submit" id="submitBtn">Analizza Messaggio</button>
+        </form>
+
+        <div id="loading">Analisi in corso con intelligenza artificiale... Attendici qualche secondo.</div>
+
+        <div id="result">
+            <h3 id="resultTitle">Esito Analisi</h3>
+            <p id="resultContent"></p>
+        </div>
+
+        <!-- Sezione Telegram aggiornata -->
         <div class="info-box" id="telegram-section">
             <h3>📬 Canale & Bollettini su Telegram</h3>
             <p>Unisciti al canale ufficiale o avvia il bot per ricevere le allerte di sicurezza e i bollettini periodici direttamente sullo smartphone.</p>
@@ -12,3 +244,87 @@
             </div>
             <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px; text-align: center;">🔒 Zero spam, solo notifiche di sicurezza certificate.</p>
         </div>
+
+        <div class="info-box" style="margin-top: 15px;">
+            <h3>ℹ️ Nota sulla Privacy</h3>
+            <p>Questo servizio opera nel rispetto della privacy e del GDPR. Nessun dato personale o testo inserito viene salvato in database permanenti o utilizzato per addestrare modelli di intelligenza artificiale.</p>
+        </div>
+    </div>
+
+    <footer>
+        <p>Non Ci Casco Mai &copy; 2026 — Strumento di prevenzione e supporto civico.</p>
+        <p style="margin-top: 5px;">Contatti: <a href="mailto:info@noncicascomai.it"><strong>info@noncicascomai.it</strong></a></p>
+    </footer>
+
+    <script>
+        const form = document.getElementById('fraudForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const resultDiv = document.getElementById('result');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultContent = document.getElementById('resultContent');
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const text = document.getElementById('messageText').value.trim();
+            const imageFile = document.getElementById('imageFile').files[0];
+
+            if (!text && !imageFile) {
+                alert('Inserisci un testo o carica uno screenshot da analizzare.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('text', text);
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+
+            // UI Loading state
+            submitBtn.disabled = true;
+            loading.style.display = 'block';
+            resultDiv.style.display = 'none';
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultContent.textContent = data.analysis;
+                    
+                    // Rimuovi classi rischio precedenti
+                    resultDiv.className = '';
+                    
+                    // Assegna classe in base al livello rilevato
+                    const analysisText = data.analysis.toLowerCase();
+                    if (analysisText.includes('alto') || analysisText.includes('pericolo') || analysisText.includes('truffa')) {
+                        resultDiv.classList.add('risk-alto');
+                        resultTitle.textContent = '🚨 ATTENZIONE: Alto Rischio di Truffa!';
+                    } else if (analysisText.includes('medio') || analysisText.includes('attenzione')) {
+                        resultDiv.classList.add('risk-medio');
+                        resultTitle.textContent = '⚠️ ATTENZIONE: Elementi Sospetti Rilevati';
+                    } else {
+                        resultDiv.classList.add('risk-basso');
+                        resultTitle.textContent = '✅ Esito: Basso Rischio / Probabilmente Sicuro';
+                    }
+
+                    resultDiv.style.display = 'block';
+                } else {
+                    alert(data.error || 'Errore durante l\'analisi.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Errore di connessione al server.');
+            } finally {
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
