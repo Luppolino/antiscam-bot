@@ -4,7 +4,7 @@ import urllib.request
 import urllib.parse
 import base64
 import time
-from fastapi import FastAPI, Request, Form, File, UploadFile
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from PIL import Image
 
@@ -20,15 +20,6 @@ Analizza il messaggio o l'immagine e rispondi con 4 sezioni:
 2. PERCHÉ È UNA TRUFFA
 3. LEVA PSICOLOGICA USATA
 4. COSA FARE ORA
-"""
-
-NEWSLETTER_PROMPT = """
-Sei 'Non Ci Casco Mai', un esperto di cybersecurity. Crea una breve newsletter settimanale (in italiano) con le allerte sulle truffe più diffuse in Italia (es. finti pacchi Nexi, SMS Poste Info, phishing bancario). 
-La newsletter deve essere strutturata così:
-- Titolo accattivante della settimana
-- 2 principali allerte o truffe del momento spiegate brevemente
-- Un consiglio pratico di sicurezza per gli utenti
-Usa un tono chiaro, professionale e protettivo.
 """
 
 def call_gemini_api_native(prompt, image_path=None):
@@ -109,7 +100,6 @@ def send_telegram_message(chat_id, text):
     except Exception as e:
         print(f"Errore Telegram: {e}")
 
-# Rotta principale che carica la pagina web leggendo il file HTML dalla cartella templates
 @app.get("/", response_class=HTMLResponse)
 def read_root():
     try:
@@ -118,7 +108,6 @@ def read_root():
     except Exception as e:
         return f"<h1>Errore caricamento template: {e}</h1>"
 
-# Rotta per servire la pagina Privacy Policy e Termini di Servizio
 @app.get("/privacy", response_class=HTMLResponse)
 def privacy_page():
     try:
@@ -143,15 +132,6 @@ async def web_analizza(data: dict):
         return JSONResponse({"risultato": res})
     except Exception as e:
         return JSONResponse({"errore": str(e)})
-
-# Endpoint per la generazione automatica del bollettino/newsletter settimanale tramite IA
-@app.get("/genera-newsletter", response_class=JSONResponse)
-def genera_newsletter():
-    try:
-        contenuto_newsletter = call_gemini_api_native(NEWSLETTER_PROMPT)
-        return {"status": "success", "newsletter": contenuto_newsletter}
-    except Exception as e:
-        return {"status": "error", "errore": str(e)}
 
 @app.post("/telegram")
 async def telegram_webhook(request: Request):
