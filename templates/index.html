@@ -74,11 +74,8 @@
         .file-upload {
             margin-bottom: 15px; font-size: 14px; color: #007bff; text-align: left;
         }
-        input[type="file"], input[type="email"] {
+        input[type="file"] {
             display: block; margin-top: 5px; font-size: 14px; color: #333;
-        }
-        input[type="email"] {
-            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; margin-bottom: 10px;
         }
         button {
             width: 100%; background-color: #007bff; color: white; border: none;
@@ -151,7 +148,7 @@
         <a href="#verifica">🔍 Verifica</a>
         <a href="#truffe">🚨 Truffe</a>
         <a href="#progetto">💡 Progetto</a>
-        <a href="#newsletter">📬 Newsletter</a>
+        <a href="#telegram-section">📢 Telegram</a>
         <a href="#contatti">✉️ Contatti</a>
         <a href="/privacy" target="_blank">📄 Privacy Policy</a>
     </div>
@@ -217,7 +214,7 @@
         </div>
     </div>
 
-    <!-- SEZIONE PROGETTO, NEWSLETTER E CONTATTI -->
+    <!-- SEZIONE PROGETTO, TELEGRAM E CONTATTI -->
     <div class="container">
         <h2>ℹ️ Informazioni & Contatti</h2>
         
@@ -226,27 +223,22 @@
             <p><strong>Non Ci Casco Mai</strong> nasce per proteggere gli utenti dalle truffe digitali quotidiane. Sfruttando un'avanzata intelligenza artificiale di analisi antifrode, il sistema individua trappole, leve psicologiche e link di phishing in pochi secondi.</p>
         </div>
 
-        <div class="info-box" id="newsletter">
-            <h3>📬 Newsletter & Aggiornamenti</h3>
-            <p>Iscriviti per ricevere settimanalmente le allerte sulle nuove truffe in circolazione e i consigli di sicurezza direttamente via email.</p>
+        <div class="info-box" id="telegram-section">
+            <h3>📬 Canale & Bollettini su Telegram</h3>
+            <p>Unisciti al canale ufficiale o avvia il bot per ricevere le allerte di sicurezza e i bollettini periodici direttamente sullo smartphone.</p>
             
-            <!-- Box di iscrizione con consenso GDPR -->
-            <div style="margin-top: 15px;">
-                <input type="email" id="emailIscrizione" placeholder="Il tuo indirizzo email...">
-                
-                <div style="margin: 10px 0; text-align: left; font-size: 13px; color: #555;">
-                    <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="checkPrivacy" style="margin-top: 3px;">
-                        <span>Accetto i termini della <a href="/privacy" target="_blank">Privacy Policy</a> e acconsento al trattamento della mia email per la ricezione della newsletter.</span>
-                    </label>
-                </div>
-
-                <button onclick="iscriviNewsletter()" style="padding: 10px; font-size: 14px;">Iscriviti Gratis</button>
-                <p id="msgIscrizione" style="font-size: 13px; margin-top: 8px; font-weight: bold; display: none;"></p>
+            <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="https://t.me/TUA_PAGINA_O_CANALE" target="_blank" style="flex: 1; min-width: 200px; text-align: center; text-decoration: none; background-color: #0088cc; color: white; padding: 12px; font-size: 14px; border-radius: 8px; font-weight: bold;">
+                    📢 Unisciti al Canale Telegram
+                </a>
+                <a href="https://t.me/TUO_BOT_USERNAME" target="_blank" style="flex: 1; min-width: 200px; text-align: center; text-decoration: none; background-color: #28a745; color: white; padding: 12px; font-size: 14px; border-radius: 8px; font-weight: bold;">
+                    🤖 Avvia il Bot Antifrode
+                </a>
             </div>
+            <p style="font-size: 11px; color: #777; margin-top: 10px; text-align: center;">🔒 Zero spam, solo notifiche di sicurezza certificate.</p>
         </div>
 
-        <div class="info-box" id="contatti">
+        <div class="info-box" id="contatti" style="margin-top: 20px;">
             <h3>✉️ Contatti & Segnalazioni</h3>
             <p>Hai riscontrato una nuova truffa o vuoi inviarci una segnalazione? Puoi contattarci direttamente via email all'indirizzo: <br><a href="mailto:noncicascomai@gmail.com"><strong>noncicascomai@gmail.com</strong></a></p>
         </div>
@@ -308,32 +300,6 @@
             } catch (error) {
                 divRisultato.innerHTML = '<span style="color: red;">Errore di connessione al server.</span>';
             }
-        }
-
-        function iscriviNewsletter() {
-            const email = document.getElementById('emailIscrizione').value;
-            const checkPrivacy = document.getElementById('checkPrivacy').checked;
-            const msg = document.getElementById('msgIscrizione');
-            
-            if (!email || !email.includes('@')) {
-                msg.style.display = 'block';
-                msg.style.color = '#dc3545';
-                msg.innerText = '⚠️ Inserisci un indirizzo email valido.';
-                return;
-            }
-
-            if (!checkPrivacy) {
-                msg.style.display = 'block';
-                msg.style.color = '#dc3545';
-                msg.innerText = '⚠️ Devi accettare la Privacy Policy per procedere.';
-                return;
-            }
-
-            msg.style.display = 'block';
-            msg.style.color = '#28a745';
-            msg.innerText = '🎉 Grazie! Ti sei iscritto con successo alle allerte di Non Ci Casco Mai.';
-            document.getElementById('emailIscrizione').value = '';
-            document.getElementById('checkPrivacy').checked = false;
         }
     </script>
 </body>
