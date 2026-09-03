@@ -118,6 +118,15 @@ def read_root():
     except Exception as e:
         return f"<h1>Errore caricamento template: {e}</h1>"
 
+# Rotta per servire la pagina Privacy Policy e Termini di Servizio
+@app.get("/privacy", response_class=HTMLResponse)
+def privacy_page():
+    try:
+        with open("templates/privacy.html", "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception as e:
+        return f"<h1>Errore caricamento privacy policy: {e}</h1>"
+
 @app.post("/analizza")
 async def web_analizza(data: dict):
     try:
@@ -135,7 +144,7 @@ async def web_analizza(data: dict):
     except Exception as e:
         return JSONResponse({"errore": str(e)})
 
-# Nuovo endpoint per la generazione automatica del bollettino/newsletter settimanale tramite IA
+# Endpoint per la generazione automatica del bollettino/newsletter settimanale tramite IA
 @app.get("/genera-newsletter", response_class=JSONResponse)
 def genera_newsletter():
     try:
