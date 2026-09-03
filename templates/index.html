@@ -20,7 +20,7 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            scroll-behavior: smooth; /* Abilita lo scorrimento fluido */
+            scroll-behavior: smooth;
         }
         
         /* Barra di navigazione superiore */
@@ -74,8 +74,11 @@
         .file-upload {
             margin-bottom: 15px; font-size: 14px; color: #007bff; text-align: left;
         }
-        input[type="file"] {
+        input[type="file"], input[type="email"] {
             display: block; margin-top: 5px; font-size: 14px; color: #333;
+        }
+        input[type="email"] {
+            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; margin-bottom: 10px;
         }
         button {
             width: 100%; background-color: #007bff; color: white; border: none;
@@ -150,6 +153,7 @@
         <a href="#progetto">💡 Progetto</a>
         <a href="#newsletter">📬 Newsletter</a>
         <a href="#contatti">✉️ Contatti</a>
+        <a href="/privacy" target="_blank">📄 Privacy Policy</a>
     </div>
 
     <!-- STRUMENTO DI VERIFICA -->
@@ -165,6 +169,9 @@
         </div>
 
         <button onclick="analizzaMessaggio()">Analizza Contenuto</button>
+        
+        <!-- Disclaimer privacy -->
+        <p style="font-size: 11px; color: #777; text-align: center; margin-top: 10px;">🔒 I contenuti inseriti vengono analizzati in tempo reale e non vengono salvati sui server.</p>
 
         <div id="risultato"></div>
     </div>
@@ -221,7 +228,22 @@
 
         <div class="info-box" id="newsletter">
             <h3>📬 Newsletter & Aggiornamenti</h3>
-            <p>Rimani informato sulle nuove tipologie di frode che circolano in Italia. Puoi consultare regolarmente questa bacheca o testare subito qualsiasi messaggio sospetto.</p>
+            <p>Iscriviti per ricevere settimanalmente le allerte sulle nuove truffe in circolazione e i consigli di sicurezza direttamente via email.</p>
+            
+            <!-- Box di iscrizione con consenso GDPR -->
+            <div style="margin-top: 15px;">
+                <input type="email" id="emailIscrizione" placeholder="Il tuo indirizzo email...">
+                
+                <div style="margin: 10px 0; text-align: left; font-size: 13px; color: #555;">
+                    <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="checkPrivacy" style="margin-top: 3px;">
+                        <span>Accetto i termini della <a href="/privacy" target="_blank">Privacy Policy</a> e acconsento al trattamento della mia email per la ricezione della newsletter.</span>
+                    </label>
+                </div>
+
+                <button onclick="iscriviNewsletter()" style="padding: 10px; font-size: 14px;">Iscriviti Gratis</button>
+                <p id="msgIscrizione" style="font-size: 13px; margin-top: 8px; font-weight: bold; display: none;"></p>
+            </div>
         </div>
 
         <div class="info-box" id="contatti">
@@ -286,6 +308,32 @@
             } catch (error) {
                 divRisultato.innerHTML = '<span style="color: red;">Errore di connessione al server.</span>';
             }
+        }
+
+        function iscriviNewsletter() {
+            const email = document.getElementById('emailIscrizione').value;
+            const checkPrivacy = document.getElementById('checkPrivacy').checked;
+            const msg = document.getElementById('msgIscrizione');
+            
+            if (!email || !email.includes('@')) {
+                msg.style.display = 'block';
+                msg.style.color = '#dc3545';
+                msg.innerText = '⚠️ Inserisci un indirizzo email valido.';
+                return;
+            }
+
+            if (!checkPrivacy) {
+                msg.style.display = 'block';
+                msg.style.color = '#dc3545';
+                msg.innerText = '⚠️ Devi accettare la Privacy Policy per procedere.';
+                return;
+            }
+
+            msg.style.display = 'block';
+            msg.style.color = '#28a745';
+            msg.innerText = '🎉 Grazie! Ti sei iscritto con successo alle allerte di Non Ci Casco Mai.';
+            document.getElementById('emailIscrizione').value = '';
+            document.getElementById('checkPrivacy').checked = false;
         }
     </script>
 </body>
