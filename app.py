@@ -27,11 +27,10 @@ def call_gemini_api_native(prompt, image_path=None):
     if not GEMINI_API_KEY:
         return "⚠️ Errore: GEMINI_API_KEY non configurata."
     
-    # Ripristiniamo i modelli corretti ed evitiamo l'errore 404
     models_to_try = [
-        "gemini-1.5-flash",
-        "gemini-1.5-pro",
-        "gemini-2.5-flash"
+        "gemini-3.6-flash",
+        "gemini-3.7-flash",
+        "gemini-3.5-flash"
     ]
     
     parts = [{"text": prompt}]
