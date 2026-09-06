@@ -1,4 +1,3 @@
-# test - aggiornamento codice blindato
 import os
 import json
 import urllib.request
@@ -21,6 +20,9 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
+WHATSAPP_TOKEN = os.environ.get("WHATSAPP_TOKEN", "").strip()
+WHATSAPP_VERIFY_TOKEN = os.environ.get("WHATSAPP_VERIFY_TOKEN", "").strip()
+WHATSAPP_PHONE_NUMBER_ID = os.environ.get("WHATSAPP_PHONE_NUMBER_ID", "").strip()
 
 # Limiti di sicurezza per i dati in input
 MAX_TEXT_LENGTH = 5000  # Massimo 5000 caratteri per il testo
@@ -118,6 +120,24 @@ def send_telegram_message(chat_id, text):
     except Exception as e:
         print(f"Errore Telegram: {e}")
 
+def send_whatsapp_message(to_phone, text):
+    if not WHATSAPP_TOKEN or not WHATSAPP_PHONE_NUMBER_ID: return
+    try:
+        wa_url = f"https://graph.facebook.com/v21.0/{WHATSAPP_PHONE_NUMBER_ID}/messages"
+        headers = {
+            "Authorization": f"Bearer {WHATSAPP_TOKEN}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "messaging_product": "whatsapp",
+            "to": to_phone,
+            "text": {"body": text}
+        }
+        req = urllib.request.Request(wa_url, data=json.dumps(payload).encode('utf-8'), headers=headers, method="POST")
+        urllib.request.urlopen(req, timeout=10)
+    except Exception as e:
+        print(f"Errore WhatsApp: {e}")
+
 @app.get("/", response_class=HTMLResponse)
 @limiter.limit("30/minute")
 def read_root(request: Request):
@@ -137,7 +157,7 @@ def privacy_page(request: Request):
         return f"<h1>Errore caricamento privacy policy: {e}</h1>"
 
 @app.post("/analizza")
-@limiter.limit("5/minute")  # Massimo 5 richieste di analisi al minuto per singolo IP
+@limiter.limit("5/minute")
 async def web_analizza(request: Request):
     try:
         data = await request.json()
@@ -175,4 +195,56 @@ async def telegram_webhook(request: Request):
             send_telegram_message(chat_id, perform_core_analysis(file_path=temp_path))
     except Exception as e:
         print(f"Errore Telegram: {e}")
+    return {"status": "ok"}
+
+@app.get("/whatsapp")
+@limiter.limit("30/minute")
+def whatsapp_verify(request: Request):
+    mode = request.query_params.get("hub.mode")
+    token = request.query_params.get("hub.verify_token")
+    challenge = request.query_params.get("hub.challenge")
+    if mode == "subscribe" and token == WHATSAPP_VERIFY_TOKEN:
+        return int(challenge) if challenge and challenge.isdigit() else challenge
+    return JSONResponse({"error": "Verification failed"}, status_code=403)
+
+@app.post("/whatsapp")
+@limiter.limit("30/minute")
+async def whatsapp_webhook(request: Request):
+    try:
+        data = await request.json()
+        entry = data.get("entry", [])
+        for ent in entry:
+            changes = ent.get("changes", [])
+            for change in changes:
+                value = change.get("value", {})
+                messages = value.get("messages", [])
+                for msg in messages:
+                    from_phone = msg.get("from")
+                    msg_type = msg.get("type")
+                    
+                    if msg_type == "text":
+                        text_body = msg.get("text", {}).get("body", "")
+                        if text_body:
+                            analysis_res = perform_core_analysis(text_content=text_body)
+                            send_whatsapp_message(from_phone, analysis_res)
+                    elif msg_type == "image":
+                        send_whatsapp_message(from_phone, "Ricevuto lo screenshot! Analisi in corso...")
+                        image_id = msg.get("image", {}).get("id")
+                        media_url_meta = f"https://graph.facebook.com/v21.0/{image_id}"
+                        headers = {"Authorization": f"Bearer {WHATSAPP_TOKEN}"}
+                        req_media = urllib.request.Request(media_url_meta, headers=headers)
+                        with urllib.request.urlopen(req_media, timeout=10) as resp:
+                            media_info = json.loads(resp.read().decode())
+                            download_url = media_info.get("url")
+                        
+                        if download_url:
+                            req_dl = urllib.request.Request(download_url, headers=headers)
+                            temp_path = f"/tmp/wa_{image_id}.jpg"
+                            with urllib.request.urlopen(req_dl, timeout=15) as dl_resp, open(temp_path, "wb") as f_out:
+                                f_out.write(dl_resp.read())
+                            
+                            analysis_res = perform_core_analysis(file_path=temp_path)
+                            send_whatsapp_message(from_phone, analysis_res)
+    except Exception as e:
+        print(f"Errore WhatsApp Webhook: {e}")
     return {"status": "ok"}
