@@ -1,4 +1,4 @@
-# 'Non Ci Casco Mai' - Backend FastAPI Blindato Anti-Bot
+# test - aggiornamento codice
 import os
 import json
 import urllib.request
@@ -9,23 +9,10 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from PIL import Image
 
-# Importiamo slowapi per il Rate Limiting (protezione anti-bot e anti-flood)
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-
-# Inizializziamo il limitatore basato sull'IP del client
-limiter = Limiter(key_func=get_remote_address)
 app = FastAPI()
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
-
-# Limiti di sicurezza per prevenire attacchi DoS tramite payload enormi
-MAX_TEXT_LENGTH = 5000  # Massimo 5000 caratteri per il testo
-MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024  # Massimo 10 MB per i file immagine
 
 SYSTEM_PROMPT = """
 Sei 'Non Ci Casco Mai', un esperto di cybersecurity e analista antifrode.
@@ -40,18 +27,16 @@ def call_gemini_api_native(prompt, image_path=None):
     if not GEMINI_API_KEY:
         return "⚠️ Errore: GEMINI_API_KEY non configurata."
     
+    # Ripristiniamo i modelli corretti ed evitiamo l'errore 404
     models_to_try = [
-        "gemini-2.5-flash",
-        "gemini-2.0-flash",
-        "gemini-1.5-flash"
+        "gemini-1.5-flash",
+        "gemini-1.5-pro",
+        "gemini-2.5-flash"
     ]
     
     parts = [{"text": prompt}]
     if image_path and os.path.exists(image_path):
         try:
-            if os.path.getsize(image_path) > MAX_IMAGE_SIZE_BYTES:
-                return "⚠️ Errore: L'immagine è troppo pesante (massimo 10MB)."
-                
             img = Image.open(image_path)
             img.thumbnail((1024, 1024))
             compressed_path = image_path + "_comp.jpg"
@@ -99,8 +84,6 @@ def perform_core_analysis(text_content=None, file_path=None):
     try:
         prompt_to_send = SYSTEM_PROMPT
         if text_content:
-            if len(text_content) > MAX_TEXT_LENGTH:
-                text_content = text_content[:MAX_TEXT_LENGTH]
             prompt_to_send += f"\n\nMessaggio o URL fornito: {text_content}"
         if file_path:
             prompt_to_send += "\n\nAnalizza questo screenshot per truffe o phishing."
@@ -120,8 +103,7 @@ def send_telegram_message(chat_id, text):
         print(f"Errore Telegram: {e}")
 
 @app.get("/", response_class=HTMLResponse)
-@limiter.limit("30/minute")
-def read_root(request: Request):
+def read_root():
     try:
         with open("templates/index.html", "r", encoding="utf-8") as f:
             return f.read()
@@ -129,8 +111,7 @@ def read_root(request: Request):
         return f"<h1>Errore caricamento template: {e}</h1>"
 
 @app.get("/privacy", response_class=HTMLResponse)
-@limiter.limit("30/minute")
-def privacy_page(request: Request):
+def privacy_page():
     try:
         with open("templates/privacy.html", "r", encoding="utf-8") as f:
             return f.read()
@@ -138,10 +119,8 @@ def privacy_page(request: Request):
         return f"<h1>Errore caricamento privacy policy: {e}</h1>"
 
 @app.post("/analizza")
-@limiter.limit("5/minute")  # BLINDATURA CRITICA: Massimo 5 richieste di analisi al minuto per IP
-async def web_analizza(request: Request):
+async def web_analizza(data: dict):
     try:
-        data = await request.json()
         text = data.get("testo")
         image_base64 = data.get("image")
         temp_path = None
@@ -154,10 +133,9 @@ async def web_analizza(request: Request):
         res = perform_core_analysis(text_content=text, file_path=temp_path)
         return JSONResponse({"risultato": res})
     except Exception as e:
-        return JSONResponse({"errore": "Si è verificato un errore durante l'elaborazione della richiesta."}, status_code=500)
+        return JSONResponse({"errore": str(e)})
 
 @app.post("/telegram")
-@limiter.limit("30/minute")
 async def telegram_webhook(request: Request):
     try:
         data = await request.json()
@@ -169,8 +147,7 @@ async def telegram_webhook(request: Request):
         elif "photo" in msg:
             send_telegram_message(chat_id, "Ricevuto! Analisi in corso...")
             photo = msg["photo"][-1]
-            file_info_url = f"https://api.telegram.org/bot{BOT_TOKEN}/getFile?file_id={photo['file_id']}"
-            file_info = json.loads(urllib.request.urlopen(file_info_url).read().decode())
+            file_info = json.loads(urllib.request.urlopen(f"https://api.telegram.org/bot{BOT_TOKEN}/getFile?file_id={photo['file_id']}").read().decode())
             down_path = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_info['result']['file_path']}"
             temp_path = f"/tmp/{photo['file_id']}.jpg"
             urllib.request.urlretrieve(down_path, temp_path)
