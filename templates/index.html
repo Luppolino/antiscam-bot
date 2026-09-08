@@ -9,13 +9,13 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --bg-color: #f0f4f8;
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --bg-color: #f8fafc;
             --card-bg: #ffffff;
             --text-main: #0f172a;
             --text-muted: #64748b;
@@ -23,11 +23,11 @@
         }
 
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
             margin: 0;
-            padding: 24px 16px;
+            padding: 32px 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -36,155 +36,155 @@
         }
         
         .navbar {
-            max-width: 680px; width: 100%; background: var(--card-bg); padding: 12px 16px;
-            border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid var(--border-color);
-            display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; box-sizing: border-box; margin-bottom: 20px;
+            max-width: 680px; width: 100%; background: var(--card-bg); padding: 10px 18px;
+            border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1); border: 1px solid var(--border-color);
+            display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; box-sizing: border-box; margin-bottom: 24px;
         }
         .navbar a {
-            text-decoration: none; color: var(--primary); font-size: 13.5px; font-weight: 700;
-            padding: 8px 16px; border-radius: 20px; background: #eff6ff; transition: all 0.2s ease;
+            text-decoration: none; color: var(--text-muted); font-size: 13px; font-weight: 600;
+            padding: 6px 14px; border-radius: 8px; transition: all 0.15s ease;
         }
-        .navbar a:hover { background: var(--primary); color: white; transform: translateY(-1px); }
+        .navbar a:hover { background: #f1f5f9; color: var(--primary); }
 
         .container {
-            max-width: 680px; width: 100%; background: var(--card-bg); padding: 36px;
-            border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); border: 1px solid #ffffff;
-            margin-top: 10px; box-sizing: border-box;
+            max-width: 680px; width: 100%; background: var(--card-bg); padding: 40px;
+            border-radius: 20px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.05), 0 2px 6px -2px rgba(0,0,0,0.02);
+            border: 1px solid var(--border-color); margin-top: 12px; box-sizing: border-box;
         }
         
-        h1 { font-size: 32px; font-weight: 900; color: var(--text-main); margin-bottom: 10px; text-align: center; letter-spacing: -1px; }
-        h2 { font-size: 22px; font-weight: 800; color: var(--text-main); margin-top: 0; margin-bottom: 20px; letter-spacing: -0.5px; }
-        p.subtitle { text-align: center; color: var(--text-muted); font-size: 16px; margin-bottom: 32px; line-height: 1.6; font-weight: 500; }
+        h1 { font-size: 28px; font-weight: 800; color: var(--text-main); margin-bottom: 8px; text-align: center; letter-spacing: -0.03em; }
+        h2 { font-size: 20px; font-weight: 700; color: var(--text-main); margin-top: 0; margin-bottom: 20px; letter-spacing: -0.02em; }
+        p.subtitle { text-align: center; color: var(--text-muted); font-size: 15px; margin-bottom: 32px; line-height: 1.6; font-weight: 400; }
         
         textarea {
-            width: 100%; height: 120px; padding: 16px; border: 2px solid #e2e8f0; background: #f8fafc;
-            border-radius: 16px; font-size: 16px; font-family: inherit; resize: vertical; box-sizing: border-box; margin-bottom: 16px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%; height: 120px; padding: 16px; border: 1px solid var(--border-color); background: #fafafa;
+            border-radius: 12px; font-size: 15px; font-family: inherit; resize: vertical; box-sizing: border-box; margin-bottom: 16px;
+            transition: all 0.2s ease;
         }
-        textarea:focus { outline: none; border-color: var(--primary); background: #ffffff; box-shadow: 0 4px 20px rgba(37, 99, 235, 0.1); }
+        textarea:focus { outline: none; border-color: var(--primary); background: #ffffff; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12); }
 
-        .file-upload { margin-bottom: 24px; font-size: 15px; color: var(--primary); font-weight: 700; }
-        input[type="file"] { display: block; margin-top: 10px; font-size: 14px; color: var(--text-muted); }
+        .file-upload { margin-bottom: 24px; font-size: 14px; color: var(--text-main); font-weight: 600; }
+        input[type="file"] { display: block; margin-top: 8px; font-size: 13px; color: var(--text-muted); }
         
         button {
-            width: 100%; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none;
-            padding: 16px; font-size: 18px; border-radius: 14px; cursor: pointer; font-weight: 800;
-            transition: all 0.2s ease; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3); letter-spacing: 0.5px;
+            width: 100%; background-color: var(--primary); color: white; border: none;
+            padding: 14px; font-size: 15px; border-radius: 12px; cursor: pointer; font-weight: 700;
+            transition: background-color 0.15s ease, transform 0.05s ease; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2); letter-spacing: -0.01em;
         }
-        button:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(37, 99, 235, 0.4); }
-        button:active { transform: translateY(1px); box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3); }
+        button:hover { background-color: var(--primary-hover); }
+        button:active { transform: scale(0.99); }
         
         .spinner {
-            border: 4px solid #e2e8f0; border-top: 4px solid var(--primary); border-radius: 50%;
-            width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 20px auto;
+            border: 3px solid #f1f5f9; border-top: 3px solid var(--primary); border-radius: 50%;
+            width: 36px; height: 36px; animation: spin 0.7s linear infinite; margin: 20px auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* AREA RISULTATI */
         #risultato {
-            margin-top: 30px; display: none; font-size: 16px; line-height: 1.7; color: #334155;
-            animation: fadeIn 0.5s ease-out;
+            margin-top: 32px; display: none; font-size: 15px; line-height: 1.7; color: #334155;
+            animation: fadeIn 0.4s ease-out;
         }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* IL BANNER EMOZIONALE */
+        /* BANNER EMOZIONALE RAFFINATO */
         .verdetto-banner {
-            display: flex; align-items: center; gap: 20px; padding: 24px; border-radius: 20px;
-            margin-bottom: 30px; color: white; box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            display: flex; align-items: center; gap: 18px; padding: 22px; border-radius: 14px;
+            margin-bottom: 28px; color: white; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
         }
-        .verdetto-icon { font-size: 3.5rem; flex-shrink: 0; line-height: 1; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
+        .verdetto-icon { font-size: 2.8rem; flex-shrink: 0; line-height: 1; }
         .verdetto-content { display: flex; flex-direction: column; }
-        .verdetto-title { font-size: 1.4rem; font-weight: 900; letter-spacing: 0.5px; line-height: 1.2; text-transform: uppercase; }
-        .verdetto-subtitle { font-size: 1rem; opacity: 0.95; margin-top: 6px; font-weight: 500; line-height: 1.4; }
+        .verdetto-title { font-size: 1.2rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.3; text-transform: uppercase; }
+        .verdetto-subtitle { font-size: 0.95rem; opacity: 0.95; margin-top: 4px; font-weight: 400; line-height: 1.4; }
 
-        /* TRUFFA - Animazione Pulsante e Gradiente Aggressivo */
+        /* TRUFFA - Pulse elegante */
         .banner-truffa {
-            background: linear-gradient(135deg, #e11d48 0%, #9f1239 100%);
+            background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
             animation: pulse-danger 2s infinite;
         }
         @keyframes pulse-danger {
-            0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.5); }
-            70% { box-shadow: 0 0 0 20px rgba(225, 29, 72, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(225, 29, 72, 0); }
             100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
         }
 
-        /* SOSPETTO - Gradiente Cautela */
-        .banner-sospetto { background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%); box-shadow: 0 15px 35px rgba(245, 158, 11, 0.3); }
+        /* SOSPETTO */
+        .banner-sospetto { background: linear-gradient(135deg, #d97706 0%, #b45309 100%); }
 
-        /* SICURO - Gradiente Rassicurante */
-        .banner-sicuro { background: linear-gradient(135deg, #10b981 0%, #047857 100%); box-shadow: 0 15px 35px rgba(16, 185, 129, 0.3); }
+        /* SICURO */
+        .banner-sicuro { background: linear-gradient(135deg, #059669 0%, #047857 100%); }
 
         /* TESTO DELL'ANALISI SOTTOSTANTE */
         .analisi-content {
-            background: #ffffff; padding: 24px; border-radius: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #f1f5f9;
+            background: #fdfdfd; padding: 24px; border-radius: 14px;
+            box-shadow: inset 0 0 0 1px #f1f5f9; border: 1px solid var(--border-color);
         }
-        .analisi-content h3, .analisi-content p strong { color: #0f172a; font-weight: 800; font-size: 17px; margin-top: 24px; }
+        .analisi-content h3, .analisi-content p strong { color: var(--text-main); font-weight: 700; font-size: 16px; margin-top: 20px; letter-spacing: -0.01em; }
         .analisi-content p:first-child { margin-top: 0; }
         
         /* CARD TRUFFE E INFO */
-        .alert-card { background: #fff5f5; border-left: 5px solid #e11d48; padding: 18px; margin-bottom: 16px; border-radius: 0 12px 12px 0; }
-        .alert-card h4 { margin: 0 0 8px 0; color: #e11d48; font-size: 16px; font-weight: 800; }
-        .alert-card p { margin: 0; color: #334155; line-height: 1.6; }
-        .info-box { background: #f8fafc; border: 1px solid var(--border-color); padding: 24px; border-radius: 16px; font-size: 15px; color: #475569; margin-top: 20px; }
-        .info-box h3 { font-size: 18px; color: var(--text-main); margin-top: 0; margin-bottom: 12px; font-weight: 800; }
+        .alert-card { background: #fff5f5; border-left: 4px solid #e11d48; padding: 16px; margin-bottom: 12px; border-radius: 0 10px 10px 0; }
+        .alert-card h4 { margin: 0 0 6px 0; color: #e11d48; font-size: 15px; font-weight: 700; }
+        .alert-card p { margin: 0; color: #475569; line-height: 1.5; font-size: 14px; }
+        .info-box { background: #f8fafc; border: 1px solid var(--border-color); padding: 24px; border-radius: 14px; font-size: 14px; color: #475569; margin-top: 20px; }
+        .info-box h3 { font-size: 16px; color: var(--text-main); margin-top: 0; margin-bottom: 10px; font-weight: 700; }
     </style>
 </head>
 <body>
 
     <div class="navbar">
-        <a href="#verifica">🔍 Verifica</a>
-        <a href="#truffe">🚨 Truffe</a>
-        <a href="#telegram-section">📢 Telegram</a>
-        <a href="#contatti">✉️ Contatti</a>
+        <a href="#verifica">Verifica</a>
+        <a href="#truffe">Minacce</a>
+        <a href="#telegram-section">Telegram</a>
+        <a href="#contatti">Supporto</a>
     </div>
 
     <div class="container" id="verifica">
-        <h1>🛡️ Non Ci Casco Mai</h1>
-        <p class="subtitle">La prima IA in Italia che riconosce trappole psicologiche, finti pacchi e phishing in 5 secondi.</p>
+        <h1>Non Ci Casco Mai</h1>
+        <p class="subtitle">Analisi intelligente anti-phishing e individuazione trappole digitali in pochi secondi.</p>
         
         <textarea id="testoMessaggio" placeholder="Incolla qui il testo dell'SMS, dell'email o della chat..."></textarea>
         
         <div class="file-upload">
-            <label for="imageInput">📸 Hai uno screenshot? Caricalo qui:</label>
+            <label for="imageInput">📸 Carica uno screenshot (opzionale):</label>
             <input type="file" id="imageInput" accept="image/*">
         </div>
 
-        <button onclick="analizzaMessaggio()">ANALIZZA ORA</button>
-        <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 16px; font-weight: 600;">🔒 Analisi criptata e anonima. Nessun dato viene salvato.</p>
+        <button onclick="analizzaMessaggio()">ANALIZZA CONTENUTO</button>
+        <p style="font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 14px; font-weight: 500;">Analisi protetta e anonima in tempo reale.</p>
 
         <div id="risultato"></div>
     </div>
 
     <div class="container" id="truffe">
-        <h2>🚨 Le minacce più diffuse</h2>
+        <h2>Minacce frequenti in Italia</h2>
         <div class="alert-card">
-            <h4>📦 Finto Pacco Nexi / Poste / Bartolini</h4>
-            <p>SMS che avvisa di un pacco bloccato con un link per pagare pochi centesimi di sdoganamento. Obiettivo: rubare i dati della carta.</p>
+            <h4>📦 Finto Pacco Nexi / Poste</h4>
+            <p>Notifiche SMS fraudolente su spedizioni bloccate che richiedono micro-pagamenti per sbloccare la consegna.</p>
         </div>
         <div class="alert-card">
             <h4>🏦 Allarme "Conto Bloccato"</h4>
-            <p>Finti SMS della banca che chiedono di confermare l'identità tramite un link urgente per evitare il blocco del conto corrente.</p>
+            <p>Comunicazioni urgenti fingendosi istituti bancari o postali per spingere l'utente a inserire le credenziali su siti clone.</p>
         </div>
     </div>
 
     <div class="container">
         <div class="info-box" id="telegram-section">
-            <h3>📬 Ricevi i Bollettini Antifrode</h3>
-            <p>Unisciti al canale Telegram o usa il nostro bot per analizzare le truffe direttamente da smartphone.</p>
-            <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
-                <a href="https://t.me/noncicascomai" target="_blank" style="flex: 1; text-align: center; text-decoration: none; background: #0284c7; color: white; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 14px; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);">
-                    📢 CANALE TELEGRAM
+            <h3>Canale & Bot Telegram</h3>
+            <p>Rimani aggiornato sulle ultime allerte di cybersecurity ricevendo i bollettini direttamente sul tuo smartphone.</p>
+            <div style="margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="https://t.me/noncicascomai" target="_blank" style="flex: 1; text-align: center; text-decoration: none; background: #0284c7; color: white; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 13px;">
+                    Unisciti al Canale
                 </a>
-                <a href="https://t.me/antiscam_italia_bot" target="_blank" style="flex: 1; text-align: center; text-decoration: none; background: #16a34a; color: white; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 14px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);">
-                    🤖 BOT TELEGRAM
+                <a href="https://t.me/antiscam_italia_bot" target="_blank" style="flex: 1; text-align: center; text-decoration: none; background: #059669; color: white; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 13px;">
+                    Avvia il Bot
                 </a>
             </div>
         </div>
         
         <div class="info-box" id="contatti" style="text-align: center;">
-            <h3>✉️ Contatti e Supporto</h3>
-            <p>Scrivici a: <a href="mailto:noncicascomai@gmail.com" style="color: var(--primary); font-weight: 800; text-decoration: none;">noncicascomai@gmail.com</a></p>
+            <h3>Segnalazioni</h3>
+            <p>Contattaci per segnalare nuove truffe: <a href="mailto:noncicascomai@gmail.com" style="color: var(--primary); font-weight: 700; text-decoration: none;">noncicascomai@gmail.com</a></p>
         </div>
     </div>
 
@@ -201,10 +201,9 @@
 
             divRisultato.style.display = 'block';
             divRisultato.innerHTML = `
-                <div style="text-align: center; padding: 40px 0;">
+                <div style="text-align: center; padding: 30px 0;">
                     <div class="spinner"></div>
-                    <p style="color: #475569; font-size: 16px; font-weight: 700; margin-top: 20px;">Intelligenza Artificiale in elaborazione...</p>
-                    <p style="color: #94a3b8; font-size: 14px;">Stiamo analizzando testi, link e pattern psicologici.</p>
+                    <p style="color: var(--text-muted); font-size: 14px; font-weight: 600; margin-top: 14px;">Elaborazione in corso...</p>
                 </div>
             `;
 
@@ -233,7 +232,7 @@
                 
                 const data = await response.json();
                 if (data.errore) {
-                    divRisultato.innerHTML = '<div style="color: #e11d48; text-align:center; font-weight:bold; padding: 20px;">Errore: ' + data.errore + '</div>';
+                    divRisultato.innerHTML = '<div style="color: #e11d48; text-align:center; font-weight:600; padding: 15px;">Errore: ' + data.errore + '</div>';
                 } else {
                     const rawText = data.risultato;
                     
@@ -246,7 +245,7 @@
                                 <div class="verdetto-icon">🚨</div>
                                 <div class="verdetto-content">
                                     <div class="verdetto-title">Alto Rischio: Truffa Rilevata</div>
-                                    <div class="verdetto-subtitle">Interrompi subito ogni interazione. Non cliccare alcun link e non fornire dati personali.</div>
+                                    <div class="verdetto-subtitle">Interrompi subito ogni interazione. Non cliccare link e non inserire dati personali.</div>
                                 </div>
                             </div>
                         `;
@@ -256,7 +255,7 @@
                                 <div class="verdetto-icon">⚠️</div>
                                 <div class="verdetto-content">
                                     <div class="verdetto-title">Attenzione: Contenuto Sospetto</div>
-                                    <div class="verdetto-subtitle">Procedi con estrema cautela. Cerca sempre verifiche tramite i canali ufficiali.</div>
+                                    <div class="verdetto-subtitle">Procedi con cautela e verifica esclusivamente tramite i canali ufficiali.</div>
                                 </div>
                             </div>
                         `;
@@ -266,7 +265,7 @@
                                 <div class="verdetto-icon">✅</div>
                                 <div class="verdetto-content">
                                     <div class="verdetto-title">Nessun Rischio Evidente</div>
-                                    <div class="verdetto-subtitle">Il contenuto non presenta i tipici pattern delle frodi online o del phishing.</div>
+                                    <div class="verdetto-subtitle">Il testo o lo screenshot non mostrano indicatori noti di frode o phishing.</div>
                                 </div>
                             </div>
                         `;
@@ -280,7 +279,7 @@
                     divRisultato.innerHTML = bannerHtml + '<div class="analisi-content">' + parsedHtml + '</div>';
                 }
             } catch (error) {
-                divRisultato.innerHTML = '<div style="color: #e11d48; text-align:center; font-weight:bold;">Errore di connessione al server.</div>';
+                divRisultato.innerHTML = '<div style="color: #e11d48; text-align:center; font-weight:600;">Errore di connessione al server.</div>';
             }
         }
     </script>
