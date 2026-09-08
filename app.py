@@ -19,6 +19,8 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+TELEGRAM_CHANNEL_ID = os.environ.get("TELEGRAM_CHANNEL_ID", "").strip()
+NEWSLETTER_SECRET = os.environ.get("NEWSLETTER_SECRET", "").strip()
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 WHATSAPP_TOKEN = os.environ.get("WHATSAPP_TOKEN", "").strip()
 WHATSAPP_VERIFY_TOKEN = os.environ.get("WHATSAPP_VERIFY_TOKEN", "").strip()
@@ -119,6 +121,18 @@ def send_telegram_message(chat_id, text):
     except Exception as e:
         print(f"Errore Telegram: {e}")
 
+def send_telegram_channel_message(text):
+    if not BOT_TOKEN or not TELEGRAM_CHANNEL_ID: return False
+    try:
+        tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+        payload = {"chat_id": TELEGRAM_CHANNEL_ID, "text": text}
+        req = urllib.request.Request(tg_url, data=json.dumps(payload).encode('utf-8'), headers={'Content-Type': 'application/json'})
+        urllib.request.urlopen(req, timeout=10)
+        return True
+    except Exception as e:
+        print(f"Errore invio canale Telegram: {e}")
+        return False
+
 def send_whatsapp_message(to_phone, text):
     if not WHATSAPP_TOKEN or not WHATSAPP_PHONE_NUMBER_ID: return
     try:
@@ -210,6 +224,34 @@ def privacy_page(request: Request):
             return f.read()
     except Exception as e:
         return f"<h1>Errore caricamento privacy policy: {e}</h1>"
+
+@app.get("/trigger-newsletter")
+@limiter.limit("5/minute")
+def trigger_newsletter(request: Request, token: str = ""):
+    if NEWSLETTER_SECRET and token != NEWSLETTER_SECRET:
+        return JSONResponse({"error": "Unauthorized"}, status_code=403)
+        
+    newsletter_prompt = """
+    Sei 'Non Ci Casco Mai', un esperto di cybersecurity e analista antifrode. 
+    Scrivi una pillola di sicurezza / bollettino antifrode inedito e di grande valore per il nostro canale Telegram. 
+    Scegli una delle truffe più diffuse del momento in Italia (es. smishing dei corrieri, finto operatore bancario, phishing con QR code o falsi investimenti).
+    La struttura deve essere:
+    - Un titolo accattivante ed esplicativo con emoji (es. 🚨 ALLerta TRUFFA: ...)
+    - Come agiscono i truffatori (il tranello)
+    - I segnali d'allarme da cogliere al volo
+    - La regola d'oro per difendersi
+    Tono: Professionale, chiaro, d'impatto ma rassicurante. Lunghezza: compresa tra 800 e 1200 caratteri.
+    """
+    
+    content = call_gemini_api_native(newsletter_prompt)
+    if "⚠️" in content:
+        return JSONResponse({"status": "error", "message": content}, status_code=500)
+        
+    success = send_telegram_channel_message(content)
+    if success:
+        return {"status": "success", "message": "Newsletter pubblicata sul canale con successo!"}
+    else:
+        return JSONResponse({"status": "error", "message": "Impossibile inviare il messaggio al canale Telegram. Verifica che il bot sia amministratore del canale."}, status_code=500)
 
 @app.post("/analizza")
 @limiter.limit("5/minute")
