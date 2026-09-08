@@ -4,7 +4,7 @@ import urllib.request
 import urllib.parse
 import base64
 import time
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse
 from PIL import Image
 
@@ -138,6 +138,52 @@ def send_whatsapp_message(to_phone, text):
     except Exception as e:
         print(f"Errore WhatsApp: {e}")
 
+async def process_telegram_background(chat_id, msg):
+    try:
+        if "text" in msg:
+            res = perform_core_analysis(text_content=msg["text"])
+            send_telegram_message(chat_id, res)
+        elif "photo" in msg:
+            send_telegram_message(chat_id, "Ricevuto! Analisi in corso...")
+            photo = msg["photo"][-1]
+            file_info = json.loads(urllib.request.urlopen(f"https://api.telegram.org/bot{BOT_TOKEN}/getFile?file_id={photo['file_id']}").read().decode())
+            down_path = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_info['result']['file_path']}"
+            temp_path = f"/tmp/{photo['file_id']}.jpg"
+            urllib.request.urlretrieve(down_path, temp_path)
+            res = perform_core_analysis(file_path=temp_path)
+            send_telegram_message(chat_id, res)
+    except Exception as e:
+        print(f"Errore background task Telegram: {e}")
+
+async def process_whatsapp_background(from_phone, msg):
+    try:
+        msg_type = msg.get("type")
+        if msg_type == "text":
+            text_body = msg.get("text", {}).get("body", "")
+            if text_body:
+                analysis_res = perform_core_analysis(text_content=text_body)
+                send_whatsapp_message(from_phone, analysis_res)
+        elif msg_type == "image":
+            send_whatsapp_message(from_phone, "Ricevuto lo screenshot! Analisi in corso...")
+            image_id = msg.get("image", {}).get("id")
+            media_url_meta = f"https://graph.facebook.com/v21.0/{image_id}"
+            headers = {"Authorization": f"Bearer {WHATSAPP_TOKEN}"}
+            req_media = urllib.request.Request(media_url_meta, headers=headers)
+            with urllib.request.urlopen(req_media, timeout=10) as resp:
+                media_info = json.loads(resp.read().decode())
+                download_url = media_info.get("url")
+            
+            if download_url:
+                req_dl = urllib.request.Request(download_url, headers=headers)
+                temp_path = f"/tmp/wa_{image_id}.jpg"
+                with urllib.request.urlopen(req_dl, timeout=15) as dl_resp, open(temp_path, "wb") as f_out:
+                    f_out.write(dl_resp.read())
+                
+                analysis_res = perform_core_analysis(file_path=temp_path)
+                send_whatsapp_message(from_phone, analysis_res)
+    except Exception as e:
+        print(f"Errore background task WhatsApp: {e}")
+
 @app.get("/", response_class=HTMLResponse)
 @limiter.limit("30/minute")
 def read_root(request: Request):
@@ -177,24 +223,15 @@ async def web_analizza(request: Request):
 
 @app.post("/telegram")
 @limiter.limit("30/minute")
-async def telegram_webhook(request: Request):
+async def telegram_webhook(request: Request, background_tasks: BackgroundTasks):
     try:
         data = await request.json()
         if "message" not in data: return {"status": "ok"}
         msg = data["message"]
         chat_id = msg["chat"]["id"]
-        if "text" in msg:
-            send_telegram_message(chat_id, perform_core_analysis(text_content=msg["text"]))
-        elif "photo" in msg:
-            send_telegram_message(chat_id, "Ricevuto! Analisi in corso...")
-            photo = msg["photo"][-1]
-            file_info = json.loads(urllib.request.urlopen(f"https://api.telegram.org/bot{BOT_TOKEN}/getFile?file_id={photo['file_id']}").read().decode())
-            down_path = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_info['result']['file_path']}"
-            temp_path = f"/tmp/{photo['file_id']}.jpg"
-            urllib.request.urlretrieve(down_path, temp_path)
-            send_telegram_message(chat_id, perform_core_analysis(file_path=temp_path))
+        background_tasks.add_task(process_telegram_background, chat_id, msg)
     except Exception as e:
-        print(f"Errore Telegram: {e}")
+        print(f"Errore Telegram Webhook: {e}")
     return {"status": "ok"}
 
 @app.get("/whatsapp")
@@ -209,7 +246,7 @@ def whatsapp_verify(request: Request):
 
 @app.post("/whatsapp")
 @limiter.limit("30/minute")
-async def whatsapp_webhook(request: Request):
+async def whatsapp_webhook(request: Request, background_tasks: BackgroundTasks):
     try:
         data = await request.json()
         entry = data.get("entry", [])
@@ -220,31 +257,7 @@ async def whatsapp_webhook(request: Request):
                 messages = value.get("messages", [])
                 for msg in messages:
                     from_phone = msg.get("from")
-                    msg_type = msg.get("type")
-                    
-                    if msg_type == "text":
-                        text_body = msg.get("text", {}).get("body", "")
-                        if text_body:
-                            analysis_res = perform_core_analysis(text_content=text_body)
-                            send_whatsapp_message(from_phone, analysis_res)
-                    elif msg_type == "image":
-                        send_whatsapp_message(from_phone, "Ricevuto lo screenshot! Analisi in corso...")
-                        image_id = msg.get("image", {}).get("id")
-                        media_url_meta = f"https://graph.facebook.com/v21.0/{image_id}"
-                        headers = {"Authorization": f"Bearer {WHATSAPP_TOKEN}"}
-                        req_media = urllib.request.Request(media_url_meta, headers=headers)
-                        with urllib.request.urlopen(req_media, timeout=10) as resp:
-                            media_info = json.loads(resp.read().decode())
-                            download_url = media_info.get("url")
-                        
-                        if download_url:
-                            req_dl = urllib.request.Request(download_url, headers=headers)
-                            temp_path = f"/tmp/wa_{image_id}.jpg"
-                            with urllib.request.urlopen(req_dl, timeout=15) as dl_resp, open(temp_path, "wb") as f_out:
-                                f_out.write(dl_resp.read())
-                            
-                            analysis_res = perform_core_analysis(file_path=temp_path)
-                            send_whatsapp_message(from_phone, analysis_res)
+                    background_tasks.add_task(process_whatsapp_background, from_phone, msg)
     except Exception as e:
         print(f"Errore WhatsApp Webhook: {e}")
     return {"status": "ok"}
