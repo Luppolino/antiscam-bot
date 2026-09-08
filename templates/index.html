@@ -9,26 +9,31 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --slate-bg: #0b0f19;
-            --surface-glass: rgba(15, 23, 42, 0.8);
-            --surface-card: rgba(30, 41, 59, 0.55);
-            --accent-indigo: #6366f1;
-            --accent-cyan: #38bdf8;
-            --text-main: #f1f5f9;
-            --text-muted: #94a3b8;
-            --border-glass: rgba(255, 255, 255, 0.08);
-            --alert-red: #ef4444;
-            --alert-amber: #f59e0b;
-            --alert-green: #10b981;
+            --bg-canvas: #f4f5f7;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-subtle: #e2e8f0;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --alert-red-bg: #fef2f2;
+            --alert-red-border: #fca5a5;
+            --alert-red-text: #991b1b;
+            --alert-amber-bg: #fffbeb;
+            --alert-amber-border: #fcd34d;
+            --alert-amber-text: #92400e;
+            --alert-green-bg: #f0fdf4;
+            --alert-green-border: #6ee7b7;
+            --alert-green-text: #065f46;
         }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--slate-bg);
+            background-color: var(--bg-canvas);
             color: var(--text-main);
             margin: 0;
             padding: 40px 20px;
@@ -36,117 +41,109 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            background-image: 
-                radial-gradient(circle at 10% 15%, rgba(99, 102, 241, 0.08) 0%, transparent 45%),
-                radial-gradient(circle at 90% 85%, rgba(56, 189, 248, 0.06) 0%, transparent 45%),
-                linear-gradient(to bottom, #0b0f19, #070a12);
-            background-attachment: fixed;
             -webkit-font-smoothing: antialiased;
         }
         
-        /* Navbar Glassmorphism */
+        /* Navbar Executive Fintech */
         .navbar {
-            max-width: 720px; width: 100%; background: var(--surface-glass); backdrop-filter: blur(16px);
-            padding: 12px 20px; border-radius: 16px; border: 1px solid var(--border-glass);
-            display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; box-sizing: border-box; margin-bottom: 28px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            max-width: 720px; width: 100%; background: #ffffff;
+            padding: 12px 20px; border-radius: 16px; border: 1px solid var(--border-subtle);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; box-sizing: border-box; margin-bottom: 24px;
         }
         .navbar a {
-            text-decoration: none; color: var(--text-muted); font-size: 13.5px; font-weight: 500;
-            padding: 6px 14px; border-radius: 10px; transition: all 0.2s ease;
+            text-decoration: none; color: var(--text-muted); font-size: 13.5px; font-weight: 600;
+            padding: 6px 14px; border-radius: 8px; transition: all 0.2s ease;
         }
-        .navbar a:hover { background: rgba(56, 189, 248, 0.1); color: var(--accent-cyan); }
+        .navbar a:hover { background: #eff6ff; color: var(--primary); }
 
         .container {
-            max-width: 720px; width: 100%; background: var(--surface-glass); backdrop-filter: blur(20px);
-            padding: 40px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-            border: 1px solid var(--border-glass); margin-top: 16px; box-sizing: border-box; position: relative; overflow: hidden;
-        }
-        .container::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+            max-width: 720px; width: 100%; background: var(--card-bg); padding: 40px;
+            border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            border: 1px solid var(--border-subtle); margin-top: 16px; box-sizing: border-box;
         }
         
-        h1 { font-size: 28px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; text-align: center; letter-spacing: -0.03em; }
-        h2 { font-size: 20px; font-weight: 600; color: var(--text-main); border-bottom: 1px solid var(--border-glass); padding-bottom: 12px; margin-top: 0; letter-spacing: -0.02em; }
-        h3.category-title { font-size: 11.5px; color: var(--accent-cyan); margin: 28px 0 12px 0; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+        h1 { font-size: 30px; font-weight: 800; color: var(--text-main); margin-bottom: 8px; text-align: center; letter-spacing: -0.03em; }
+        h2 { font-size: 20px; font-weight: 700; color: var(--text-main); border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px; margin-top: 0; letter-spacing: -0.02em; }
+        h3.category-title { font-size: 12px; color: var(--text-muted); margin: 28px 0 12px 0; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
         p.subtitle { text-align: center; color: var(--text-muted); font-size: 15px; margin-bottom: 30px; line-height: 1.6; font-weight: 400; }
         
         textarea {
-            width: 100%; height: 130px; padding: 16px; border: 1px solid var(--border-glass); background: rgba(15, 23, 42, 0.6);
-            border-radius: 12px; font-size: 15px; font-family: inherit; color: var(--text-main); resize: vertical; box-sizing: border-box; margin-bottom: 16px;
+            width: 100%; height: 130px; padding: 16px; border: 1.5px solid var(--border-subtle); background: #fafafa;
+            border-radius: 14px; font-size: 15px; font-family: inherit; color: var(--text-main); resize: vertical; box-sizing: border-box; margin-bottom: 16px;
             transition: all 0.2s ease;
         }
-        textarea:focus { outline: none; border-color: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15); background: rgba(15, 23, 42, 0.9); }
+        textarea:focus { outline: none; border-color: var(--primary); background: #ffffff; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
 
-        .file-upload { margin-bottom: 24px; font-size: 14px; color: var(--text-main); font-weight: 500; }
+        .file-upload { margin-bottom: 24px; font-size: 14px; color: var(--text-main); font-weight: 600; }
         input[type="file"] { display: block; margin-top: 8px; font-size: 13px; color: var(--text-muted); }
         
         button {
-            width: 100%; background: linear-gradient(135deg, var(--accent-indigo) 0%, var(--accent-cyan) 100%); color: #ffffff; border: none;
-            padding: 16px; font-size: 15px; border-radius: 12px; cursor: pointer; font-weight: 600;
-            transition: all 0.2s ease; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); letter-spacing: -0.01em;
+            width: 100%; background-color: var(--primary); color: white; border: none;
+            padding: 16px; font-size: 16px; border-radius: 14px; cursor: pointer; font-weight: 700;
+            transition: background-color 0.2s ease, transform 0.05s ease; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); letter-spacing: -0.01em;
         }
-        button:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4); }
-        button:active { transform: translateY(1px); }
+        button:hover { background-color: var(--primary-hover); }
+        button:active { transform: scale(0.99); }
         
-        /* Spinner */
+        /* Spinner pulito */
         .scanner-hud { text-align: center; padding: 32px 0; }
         .spinner {
-            border: 2px solid rgba(255,255,255,0.1); border-top: 2px solid var(--accent-cyan); border-radius: 50%;
-            width: 32px; height: 32px; animation: spin 0.7s linear infinite; margin: 0 auto 16px auto;
+            border: 3px solid var(--border-subtle); border-top: 3px solid var(--primary); border-radius: 50%;
+            width: 36px; height: 36px; animation: spin 0.7s linear infinite; margin: 0 auto 16px auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* RISULTATI */
-        #risultato { margin-top: 32px; display: none; font-size: 15px; line-height: 1.7; color: #cbd5e1; }
+        #risultato { margin-top: 32px; display: none; font-size: 15px; line-height: 1.7; color: var(--text-main); }
 
-        /* VERDETTO BANNERS GLASSMORPHISM */
+        /* VERDETTO BANNERS EXECUTIVE */
         .verdetto-banner {
             display: flex; align-items: flex-start; gap: 16px; padding: 20px; border-radius: 14px;
-            margin-bottom: 28px; border-left: 4px solid; backdrop-filter: blur(12px);
+            margin-bottom: 28px; border-left: 5px solid;
         }
-        .verdetto-icon { font-size: 1.5rem; flex-shrink: 0; line-height: 1.2; }
+        .verdetto-icon { font-size: 1.6rem; flex-shrink: 0; line-height: 1.2; }
         .verdetto-content { display: flex; flex-direction: column; }
-        .verdetto-title { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; text-transform: uppercase; margin-bottom: 4px; }
-        .verdetto-subtitle { font-size: 0.95rem; opacity: 0.9; line-height: 1.5; font-weight: 400; }
+        .verdetto-title { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.01em; text-transform: uppercase; margin-bottom: 4px; }
+        .verdetto-subtitle { font-size: 0.95rem; opacity: 0.95; line-height: 1.5; font-weight: 400; }
 
-        .banner-truffa { background: rgba(239, 68, 68, 0.12); border-color: var(--alert-red); color: #fca5a5; }
-        .banner-sospetto { background: rgba(245, 158, 11, 0.12); border-color: var(--alert-amber); color: #fde047; }
-        .banner-sicuro { background: rgba(16, 185, 129, 0.12); border-color: var(--alert-green); color: #6ee7b7; }
+        .banner-truffa { background: var(--alert-red-bg); border-color: var(--alert-red-border); color: var(--alert-red-text); }
+        .banner-sospetto { background: var(--alert-amber-bg); border-color: var(--alert-amber-border); color: var(--alert-amber-text); }
+        .banner-sicuro { background: var(--alert-green-bg); border-color: var(--alert-green-border); color: var(--alert-green-text); }
 
         /* ANALISI DETTAGLIATA */
         .analisi-content {
-            background: var(--surface-card); padding: 24px; border-radius: 14px; border: 1px solid var(--border-glass);
+            background: #f8fafc; padding: 24px; border-radius: 14px; border: 1px solid var(--border-subtle);
         }
-        .analisi-content h3, .analisi-content p strong { color: var(--text-main); font-weight: 600; font-size: 15px; margin-top: 20px; }
+        .analisi-content h3, .analisi-content p strong { color: var(--text-main); font-weight: 700; font-size: 16px; margin-top: 20px; }
         .analisi-content p:first-child { margin-top: 0; }
         
         /* ALERT CARDS TRUFFE */
         .alert-card {
-            background: var(--surface-card); border: 1px solid var(--border-glass);
-            padding: 16px 20px; margin-bottom: 12px; border-radius: 12px; transition: background 0.2s ease;
+            background: #f8fafc; border: 1px solid var(--border-subtle);
+            padding: 18px 20px; margin-bottom: 14px; border-radius: 12px; transition: border-color 0.2s ease;
         }
-        .alert-card:hover { background: rgba(30, 41, 59, 0.8); }
-        .alert-card h4 { margin: 0 0 6px 0; color: var(--text-main); font-size: 15px; font-weight: 600; }
+        .alert-card:hover { border-color: var(--primary); }
+        .alert-card h4 { margin: 0 0 6px 0; color: var(--text-main); font-size: 15px; font-weight: 700; }
         .alert-card p { margin: 0; color: var(--text-muted); font-size: 14px; line-height: 1.5; }
         
         .category-grid { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; justify-content: center; }
-        .cat-item { background: rgba(56, 189, 248, 0.1); color: var(--accent-cyan); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid rgba(56, 189, 248, 0.2); }
+        .cat-item { background: #eff6ff; color: var(--primary); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #dbeafe; }
         
         .info-box {
-            background: var(--surface-card); border: 1px solid var(--border-glass);
+            background: #f8fafc; border: 1px solid var(--border-subtle);
             padding: 24px; border-radius: 14px; font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-top: 20px;
         }
-        .info-box h3 { font-size: 15px; color: var(--text-main); margin-top: 0; margin-bottom: 8px; font-weight: 600; }
+        .info-box h3 { font-size: 16px; color: var(--text-main); margin-top: 0; margin-bottom: 8px; font-weight: 700; }
         
         .seo-section {
-            margin-top: 36px; font-size: 13px; color: var(--text-muted); border-top: 1px solid var(--border-glass); padding-top: 20px; text-align: center;
+            margin-top: 36px; font-size: 13px; color: var(--text-muted); border-top: 1px solid var(--border-subtle); padding-top: 20px; text-align: center;
         }
     </style>
 </head>
 <body>
 
+    <!-- NAVBAR -->
     <div class="navbar">
         <a href="#verifica">🔍 Verifica</a>
         <a href="#truffe">🚨 Truffe</a>
@@ -156,6 +153,7 @@
         <a href="/privacy" target="_blank">📄 Privacy Policy</a>
     </div>
 
+    <!-- STRUMENTO DI VERIFICA -->
     <div class="container" id="verifica">
         <h1>🛡️ Non Ci Casco Mai</h1>
         <p class="subtitle">Analisi intelligente anti-phishing e individuazione frodi digitali in tempo reale tramite intelligenza artificiale.</p>
@@ -173,6 +171,7 @@
         <div id="risultato"></div>
     </div>
 
+    <!-- BACHECA DELLE TRUFFE DEL MOMENTO -->
     <div class="container" id="truffe">
         <h2>🚨 Truffe del Momento in Italia</h2>
         <p class="subtitle">Le tipologie di frode più segnalate e monitorate dai sistemi di sicurezza.</p>
@@ -213,6 +212,7 @@
         </div>
     </div>
 
+    <!-- SEZIONE PROGETTO, TELEGRAM E CONTATTI -->
     <div class="container">
         <h2>ℹ️ Informazioni & Supporto</h2>
         
@@ -237,7 +237,7 @@
 
         <div class="info-box" id="contatti">
             <h3>✉️ Contatti & Segnalazioni</h3>
-            <p>Per segnalare nuove campagne di phishing o richiedere informazioni: <br><a href="mailto:noncicascomai@gmail.com" style="color: var(--accent-cyan); font-weight: 600; text-decoration: none;">noncicascomai@gmail.com</a></p>
+            <p>Per segnalare nuove campagne di phishing o richiedere informazioni: <br><a href="mailto:noncicascomai@gmail.com" style="color: var(--primary); font-weight: 600; text-decoration: none;">noncicascomai@gmail.com</a></p>
         </div>
     </div>
 
@@ -290,7 +290,7 @@
                 
                 const data = await response.json();
                 if (data.errore) {
-                    divRisultato.innerHTML = '<div style="color: #ef4444; font-weight: 500; padding: 16px;">Errore: ' + data.errore + '</div>';
+                    divRisultato.innerHTML = '<div style="color: var(--alert-red-text); font-weight: 600; padding: 16px;">Errore: ' + data.errore + '</div>';
                 } else {
                     const rawText = data.risultato;
                     
@@ -337,7 +337,7 @@
                     divRisultato.innerHTML = bannerHtml + '<div class="analisi-content">' + parsedHtml + '</div>';
                 }
             } catch (error) {
-                divRisultato.innerHTML = '<div style="color: #ef4444; font-weight: 500;">Errore di connessione al server.</div>';
+                divRisultato.innerHTML = '<div style="color: var(--alert-red-text); font-weight: 600;">Errore di connessione al server.</div>';
             }
         }
     </script>
