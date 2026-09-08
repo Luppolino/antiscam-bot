@@ -3,276 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Non Ci Casco Mai | Verifica Truffe SMS, Pacco Nexi e Poste Info</title>
+    <title>Non Ci Casco Mai | Verifica Truffe e Phishing Online</title>
     <meta name="description" content="Verifica gratis truffe SMS, finti pacchi Nexi, allerte Poste Info e phishing online con Non Ci Casco Mai.">
     
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --space-bg: #060913;
-            --card-surface: #0f172a;
-            --card-inner: #131c31;
-            --accent-cyan: #38bdf8;
-            --accent-blue: #0284c7;
-            --alert-red: #ef4444;
-            --alert-amber: #f59e0b;
-            --alert-green: #10b981;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border-glow: rgba(56, 189, 248, 0.15);
+            --bg-canvas: #ffffff;
+            --text-main: #111827;
+            --text-muted: #4b5563;
+            --border-subtle: #e5e7eb;
+            --accent-dark: #111827;
+            --accent-hover: #1f2937;
+            --alert-red-bg: #fef2f2;
+            --alert-red-border: #f87171;
+            --alert-red-text: #991b1b;
+            --alert-amber-bg: #fffbeb;
+            --alert-amber-border: #fbbf24;
+            --alert-amber-text: #92400e;
+            --alert-green-bg: #f0fdf4;
+            --alert-green-border: #34d399;
+            --alert-green-text: #065f46;
         }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--space-bg);
+            background-color: var(--bg-canvas);
             color: var(--text-main);
             margin: 0;
-            padding: 40px 16px;
+            padding: 48px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            background-image: 
-                radial-gradient(circle at 15% 10%, rgba(56, 189, 248, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 85% 90%, rgba(2, 132, 199, 0.05) 0%, transparent 40%),
-                linear-gradient(to bottom, #060913, #030712);
-            background-attachment: fixed;
             -webkit-font-smoothing: antialiased;
         }
         
-        /* Navbar Stile Deep Space */
+        /* Navbar Minimalista Svizzera */
         .navbar {
-            max-width: 720px; width: 100%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px);
-            padding: 12px 20px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.07);
-            display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; box-sizing: border-box; margin-bottom: 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            max-width: 680px; width: 100%; background: #ffffff;
+            padding: 14px 20px; border-bottom: 1px solid var(--border-subtle);
+            display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; box-sizing: border-box; margin-bottom: 40px;
         }
         .navbar a {
-            text-decoration: none; color: var(--text-muted); font-size: 13px; font-weight: 600;
-            padding: 6px 14px; border-radius: 10px; transition: all 0.2s ease;
+            text-decoration: none; color: var(--text-muted); font-size: 13.5px; font-weight: 500;
+            padding: 4px 8px; transition: color 0.15s ease;
         }
-        .navbar a:hover { background: rgba(56, 189, 248, 0.1); color: var(--accent-cyan); }
+        .navbar a:hover { color: var(--text-main); }
 
         .container {
-            max-width: 720px; width: 100%; background: var(--card-surface); backdrop-filter: blur(20px);
-            padding: 40px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-            border: 1px solid rgba(255, 255, 255, 0.06); margin-top: 16px; box-sizing: border-box; position: relative; overflow: hidden;
-        }
-        .container::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+            max-width: 680px; width: 100%; background: #ffffff; padding: 0;
+            margin-bottom: 56px; box-sizing: border-box;
         }
         
-        h1 { font-size: 30px; font-weight: 800; color: var(--text-main); margin-bottom: 8px; text-align: center; letter-spacing: -0.03em; }
-        h2 { font-size: 20px; font-weight: 700; color: var(--text-main); border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 12px; margin-top: 0; letter-spacing: -0.02em; }
-        h3.category-title { font-size: 12px; color: var(--accent-cyan); margin: 28px 0 12px 0; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; }
-        p.subtitle { text-align: center; color: var(--text-muted); font-size: 15px; margin-bottom: 30px; line-height: 1.6; }
+        h1 { font-size: 32px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; letter-spacing: -0.03em; }
+        h2 { font-size: 20px; font-weight: 600; color: var(--text-main); border-top: 1px solid var(--border-subtle); padding-top: 24px; margin-top: 40px; margin-bottom: 20px; letter-spacing: -0.02em; }
+        h3.category-title { font-size: 11px; color: var(--text-muted); margin: 32px 0 12px 0; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+        p.subtitle { color: var(--text-muted); font-size: 16px; margin-bottom: 32px; line-height: 1.6; font-weight: 400; }
         
         textarea {
-            width: 100%; height: 130px; padding: 16px; border: 1px solid rgba(255, 255, 255, 0.08); background: var(--card-inner);
-            border-radius: 14px; font-size: 15px; font-family: inherit; color: var(--text-main); resize: vertical; box-sizing: border-box; margin-bottom: 16px;
-            transition: all 0.2s ease;
+            width: 100%; height: 130px; padding: 16px; border: 1px solid var(--border-subtle); background: #fafafa;
+            border-radius: 8px; font-size: 15px; font-family: inherit; color: var(--text-main); resize: vertical; box-sizing: border-box; margin-bottom: 16px;
+            transition: border-color 0.15s ease;
         }
-        textarea:focus { outline: none; border-color: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15); background: #18223c; }
+        textarea:focus { outline: none; border-color: var(--accent-dark); background: #ffffff; }
 
-        .file-upload { margin-bottom: 24px; font-size: 14px; color: var(--accent-cyan); font-weight: 600; }
+        .file-upload { margin-bottom: 24px; font-size: 14px; color: var(--text-main); font-weight: 500; }
         input[type="file"] { display: block; margin-top: 8px; font-size: 13px; color: var(--text-muted); }
         
         button {
-            width: 100%; background-color: var(--accent-blue); color: white; border: none;
-            padding: 16px; font-size: 16px; border-radius: 14px; cursor: pointer; font-weight: 700;
-            transition: all 0.2s ease; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3); letter-spacing: -0.01em;
+            width: 100%; background-color: var(--accent-dark); color: white; border: none;
+            padding: 16px; font-size: 15px; border-radius: 8px; cursor: pointer; font-weight: 600;
+            transition: background-color 0.15s ease; letter-spacing: -0.01em;
         }
-        button:hover { background-color: var(--accent-cyan); color: #060913; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4); }
-        button:active { transform: translateY(1px); }
+        button:hover { background-color: var(--accent-hover); }
         
-        /* Spinner professionale */
-        .scanner-hud { text-align: center; padding: 40px 0; }
+        /* Spinner pulito */
+        .scanner-hud { text-align: center; padding: 32px 0; }
         .spinner {
-            border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--accent-cyan); border-radius: 50%;
-            width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto 16px auto;
+            border: 2px solid var(--border-subtle); border-top: 2px solid var(--accent-dark); border-radius: 50%;
+            width: 32px; height: 32px; animation: spin 0.7s linear infinite; margin: 0 auto 16px auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* RISULTATI */
-        #risultato { margin-top: 32px; display: none; font-size: 15px; line-height: 1.7; color: #cbd5e1; }
+        #risultato { margin-top: 32px; display: none; font-size: 15px; line-height: 1.7; color: var(--text-main); }
 
-        /* VERDETTO BANNERS PROFESSIONALI */
+        /* VERDETTO BANNERS EDITORIALI */
         .verdetto-banner {
-            display: flex; align-items: center; gap: 20px; padding: 24px; border-radius: 16px;
-            margin-bottom: 28px; color: white; box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-            position: relative; overflow: hidden;
+            display: flex; align-items: flex-start; gap: 16px; padding: 20px; border-radius: 8px;
+            margin-bottom: 28px; border-left: 4px solid;
         }
-        .verdetto-icon { font-size: 3rem; flex-shrink: 0; line-height: 1; }
+        .verdetto-icon { font-size: 1.5rem; flex-shrink: 0; line-height: 1.2; }
         .verdetto-content { display: flex; flex-direction: column; }
-        .verdetto-title { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; text-transform: uppercase; }
-        .verdetto-subtitle { font-size: 0.95rem; opacity: 0.95; margin-top: 6px; font-weight: 400; line-height: 1.4; }
+        .verdetto-title { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; text-transform: uppercase; margin-bottom: 4px; }
+        .verdetto-subtitle { font-size: 0.95rem; opacity: 0.9; line-height: 1.5; font-weight: 400; }
 
-        /* TRUFFA - Alert Rosso Istituzionale */
-        .banner-truffa {
-            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            animation: pulse-alert 2s infinite;
-        }
-        @keyframes pulse-alert {
-            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); }
-            70% { box-shadow: 0 0 0 15px rgba(220, 38, 38, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
-        }
-
-        /* SOSPETTO - Alert Ambra */
-        .banner-sospetto {
-            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
-            border: 1px solid rgba(245, 158, 11, 0.4);
-        }
-
-        /* SICURO - Alert Verde */
-        .banner-sicuro {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            border: 1px solid rgba(16, 185, 129, 0.4);
-        }
+        .banner-truffa { background: var(--alert-red-bg); border-color: var(--alert-red-border); color: var(--alert-red-text); }
+        .banner-sospetto { background: var(--alert-amber-bg); border-color: var(--alert-amber-border); color: var(--alert-amber-text); }
+        .banner-sicuro { background: var(--alert-green-bg); border-color: var(--alert-green-border); color: var(--alert-green-text); }
 
         /* ANALISI DETTAGLIATA */
         .analisi-content {
-            background: var(--card-inner); padding: 24px; border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: #fafafa; padding: 24px; border-radius: 8px; border: 1px solid var(--border-subtle);
         }
-        .analisi-content h3, .analisi-content p strong { color: var(--text-main); font-weight: 700; font-size: 16px; margin-top: 22px; }
+        .analisi-content h3, .analisi-content p strong { color: var(--text-main); font-weight: 600; font-size: 15px; margin-top: 20px; }
         .analisi-content p:first-child { margin-top: 0; }
         
-        /* ALERT CARDS TRUFFE DEL MOMENTO */
+        /* ALERT CARDS TRUFFE */
         .alert-card {
-            background: rgba(239, 68, 68, 0.05);
-            border-left: 4px solid var(--alert-red);
-            padding: 16px 18px; margin-bottom: 14px; border-radius: 0 12px 12px 0;
-            border-top: 1px solid rgba(239, 68, 68, 0.1); border-right: 1px solid rgba(239, 68, 68, 0.1); border-bottom: 1px solid rgba(239, 68, 68, 0.1);
+            background: #fafafa; border: 1px solid var(--border-subtle);
+            padding: 16px 20px; margin-bottom: 12px; border-radius: 8px;
         }
-        .alert-card h4 { margin: 0 0 6px 0; color: #f87171; font-size: 15px; font-weight: 700; }
+        .alert-card h4 { margin: 0 0 6px 0; color: var(--text-main); font-size: 15px; font-weight: 600; }
         .alert-card p { margin: 0; color: var(--text-muted); font-size: 14px; line-height: 1.5; }
         
-        .category-grid { display: flex; gap: 8px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
-        .cat-item { background: rgba(56, 189, 248, 0.08); color: var(--accent-cyan); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid rgba(56, 189, 248, 0.2); }
+        .category-grid { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+        .cat-item { background: #f3f4f6; color: var(--text-main); padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 500; }
         
         .info-box {
-            background: var(--card-inner); border: 1px solid rgba(255, 255, 255, 0.06);
-            padding: 24px; border-radius: 16px; font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-top: 20px;
+            background: #fafafa; border: 1px solid var(--border-subtle);
+            padding: 24px; border-radius: 8px; font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-top: 24px;
         }
-        .info-box h3 { font-size: 16px; color: var(--text-main); margin-top: 0; margin-bottom: 8px; font-weight: 700; }
+        .info-box h3 { font-size: 15px; color: var(--text-main); margin-top: 0; margin-bottom: 8px; font-weight: 600; }
         
         .seo-section {
-            margin-top: 30px; font-size: 13px; color: var(--text-muted); text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 20px;
+            margin-top: 48px; font-size: 13px; color: var(--text-muted); border-top: 1px solid var(--border-subtle); padding-top: 24px; text-align: left;
         }
     </style>
 </head>
 <body>
 
-    <!-- NAVBAR -->
     <div class="navbar">
-        <a href="#verifica">🔍 Verifica</a>
-        <a href="#truffe">🚨 Truffe</a>
-        <a href="#progetto">💡 Progetto</a>
-        <a href="#telegram-section">📢 Telegram</a>
-        <a href="#contatti">✉️ Contatti</a>
-        <a href="/privacy" target="_blank">📄 Privacy Policy</a>
+        <a href="#verifica">Verifica</a>
+        <a href="#truffe">Minacce</a>
+        <a href="#progetto">Progetto</a>
+        <a href="#telegram-section">Telegram</a>
+        <a href="#contatti">Contatti</a>
+        <a href="/privacy" target="_blank">Privacy Policy</a>
     </div>
 
-    <!-- STRUMENTO DI VERIFICA -->
     <div class="container" id="verifica">
-        <h1>🛡️ Non Ci Casco Mai</h1>
-        <p class="subtitle">Analisi intelligente anti-phishing: incolla un messaggio o carica uno screenshot per verificare qualsiasi rischio di frode.</p>
+        <h1>Non Ci Casco Mai</h1>
+        <p class="subtitle">Strumento indipendente di analisi anti-phishing e individuazione frodi digitali basato su intelligenza artificiale.</p>
         
-        <textarea id="testoMessaggio" placeholder="Incolla il testo del messaggio, l'annuncio o la chat con il venditore..."></textarea>
+        <textarea id="testoMessaggio" placeholder="Incolla il testo del messaggio, l'email o la chat sospetta..."></textarea>
         
         <div class="file-upload">
-            <label for="imageInput">📸 Oppure carica uno screenshot (chat o SMS):</label>
+            <label for="imageInput">Carica uno screenshot (opzionale):</label>
             <input type="file" id="imageInput" accept="image/*">
         </div>
 
-        <button onclick="analizzaMessaggio()">AVVIA ANALISI ANTIFRODE</button>
-        
-        <p style="font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 14px;">🔒 I contenuti inseriti vengono analizzati in tempo reale e non vengono salvati sui server.</p>
+        <button onclick="analizzaMessaggio()">Analizza Contenuto</button>
+        <p style="font-size: 12px; color: var(--text-muted); margin-top: 12px;">Analisi in tempo reale. Nessun dato viene memorizzato sui server.</p>
 
         <div id="risultato"></div>
     </div>
 
-    <!-- BACHECA DELLE TRUFFE DEL MOMENTO -->
     <div class="container" id="truffe">
-        <h2>🚨 Truffe del Momento in Italia</h2>
-        <p class="subtitle">Le allerte più segnalate per riconoscere phishing e raggiri commerciali.</p>
+        <h2>Truffe frequenti in Italia</h2>
+        <p class="subtitle">Le tipologie di frode più segnalate e monitorate dai sistemi di sicurezza.</p>
 
         <div class="category-grid">
-            <div class="cat-item">📱 Phishing & Messaggi</div>
-            <div class="cat-item">🛒 Marketplace & Vendite</div>
-            <div class="cat-item">💰 Investimenti</div>
+            <div class="cat-item">Phishing & SMS</div>
+            <div class="cat-item">Marketplace</div>
+            <div class="cat-item">Investimenti</div>
         </div>
 
-        <h3 class="category-title">📱 Phishing & Messaggi Ingannevoli</h3>
+        <h3 class="category-title">Phishing & Messaggi Ingannevoli</h3>
 
         <div class="alert-card">
-            <h4>📦 La Truffa del Finto Pacco Nexi</h4>
+            <h4>La Truffa del Finto Pacco Nexi</h4>
             <p>SMS fraudolenti che segnalano un pacco bloccato o in giacenza a nome Nexi, con link che imitano i canali ufficiali e puntano a svuotare la carta di credito.</p>
         </div>
 
         <div class="alert-card">
-            <h4>✉️ Finti SMS "Poste Info"</h4>
+            <h4>Finti SMS "Poste Info"</h4>
             <p>Messaggi ingannevoli camuffati da comunicazioni ufficiali Poste Info o BancoPosta, che parlano di transazioni sospette o blocchi temporanei del conto.</p>
         </div>
 
         <div class="alert-card">
-            <h4>📦 La Truffa del Finto Corriere</h4>
-            <p>SMS che annunciano *"Pacco in giacenza, clicca sul link per aggiornare l'indirizzo"*, chiedendo un piccolo micro-pagamento con carta per sbloccarlo.</p>
+            <h4>La Truffa del Finto Corriere</h4>
+            <p>SMS che annunciano la giacenza di un pacco chiedendo di cliccare su un link per aggiornare l'indirizzo e versare un micro-pagamento.</p>
         </div>
 
         <div class="alert-card">
-            <h4>🏦 Il Blocco del Conto Bancario o Postale</h4>
-            <p>Finti allarmi sulla sicurezza del conto che invitano a cliccare su link contraffatti per inserire le credenziali di accesso.</p>
+            <h4>Il Blocco del Conto Bancario o Postale</h4>
+            <p>Finti allarmi sulla sicurezza del conto che invitano a inserire le credenziali di accesso su portali contraffatti.</p>
         </div>
 
-        <h3 class="category-title">🛒 Finti Annunci & Marketplace</h3>
+        <h3 class="category-title">Annunci & Marketplace</h3>
 
         <div class="alert-card">
-            <h4>🏷️ Il Finto Venditore su Marketplace / Social</h4>
-            <p>Oggetti in vendita a prezzi molto vantaggiosi. Il venditore insiste per spostare la chat fuori dalla piattaforma o chiede pagamenti non tracciabili.</p>
+            <h4>Il Finto Venditore su Marketplace</h4>
+            <p>Beni in vendita a prezzi vantaggiosi con insistenza nel spostare la conversazione fuori dalla piattaforma o richiedere pagamenti non tracciabili.</p>
         </div>
     </div>
 
-    <!-- SEZIONE PROGETTO, TELEGRAM E CONTATTI -->
     <div class="container">
-        <h2>ℹ️ Informazioni & Contatti</h2>
+        <h2>Informazioni & Supporto</h2>
         
         <div class="info-box" id="progetto">
-            <h3>💡 Il Progetto</h3>
-            <p><strong>Non Ci Casco Mai</strong> nasce per proteggere gli utenti dalle truffe digitali quotidiane. Sfruttando un'avanzata intelligenza artificiale di analisi antifrode, il sistema individua trappole, leve psicologiche e link di phishing in pochi secondi.</p>
+            <h3>Il Progetto</h3>
+            <p>Non Ci Casco Mai nasce per offrire uno strumento rapido ed efficace contro le truffe digitali quotidiane. L'analisi euristica individua trappole psicologiche, urgenza artificiosa e link fraudolenti in pochi secondi.</p>
         </div>
 
         <div class="info-box" id="telegram-section">
-            <h3>📬 Canale & Bollettini su Telegram</h3>
-            <p>Unisciti al canale ufficiale o avvia il bot per ricevere le allerte di sicurezza e i bollettini periodici direttamente sullo smartphone.</p>
+            <h3>Canale & Bot Telegram</h3>
+            <p>Ricevi gli aggiornamenti di sicurezza e le allerte periodiche direttamente sul tuo smartphone.</p>
             
-            <div style="margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
-                <a href="https://t.me/noncicascomai" target="_blank" style="flex: 1; min-width: 180px; text-align: center; text-decoration: none; background: #0284c7; color: white; padding: 12px; font-size: 13px; border-radius: 10px; font-weight: 700;">
-                    📢 Unisciti al Canale
+            <div style="margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap;">
+                <a href="https://t.me/noncicascomai" target="_blank" style="text-decoration: none; background: #0088cc; color: white; padding: 10px 16px; font-size: 13px; border-radius: 6px; font-weight: 500;">
+                    Canale Telegram
                 </a>
-                <a href="https://t.me/antiscam_italia_bot" target="_blank" style="flex: 1; min-width: 180px; text-align: center; text-decoration: none; background: #059669; color: white; padding: 12px; font-size: 13px; border-radius: 10px; font-weight: 700;">
-                    🤖 Avvia il Bot Antifrode
+                <a href="https://t.me/antiscam_italia_bot" target="_blank" style="text-decoration: none; background: #10b981; color: white; padding: 10px 16px; font-size: 13px; border-radius: 6px; font-weight: 500;">
+                    Bot Antifrode
                 </a>
             </div>
-            <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px; text-align: center;">🔒 Zero spam, solo notifiche di sicurezza certificate.</p>
         </div>
 
-        <div class="info-box" id="contatti" style="margin-top: 20px;">
-            <h3>✉️ Contatti & Segnalazioni</h3>
-            <p>Hai riscontrato una nuova truffa o vuoi inviarci una segnalazione? Puoi contattarci direttamente via email all'indirizzo: <br><a href="mailto:noncicascomai@gmail.com" style="color: var(--accent-cyan); text-decoration: none; font-weight: 700;"><strong>noncicascomai@gmail.com</strong></a></p>
+        <div class="info-box" id="contatti">
+            <h3>Contatti & Segnalazioni</h3>
+            <p>Per segnalare nuove campagne di phishing o richiedere informazioni: <br><a href="mailto:noncicascomai@gmail.com" style="color: var(--text-main); font-weight: 600; text-decoration: underline;">noncicascomai@gmail.com</a></p>
         </div>
     </div>
 
     <div class="container seo-section">
-        <h3>Protezione digitale a 360 gradi con Non Ci Casco Mai</h3>
-        <p>Usa il nostro <strong>verificatore phishing online</strong> per bloccare tentativi di frode e comprare in totale sicurezza.</p>
+        <h3>Protezione digitale con Non Ci Casco Mai</h3>
+        <p>Utilizza il sistema di verifica per identificare tentativi di frode e navigare in sicurezza.</p>
     </div>
 
     <script>
@@ -290,8 +252,7 @@
             divRisultato.innerHTML = `
                 <div class="scanner-hud">
                     <div class="spinner"></div>
-                    <p style="color: var(--accent-cyan); font-size: 14px; font-weight: 600; margin: 0;">Analisi in corso con Non Ci Casco Mai...</p>
-                    <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Valutazione euristica del rischio e dei pattern di frode.</p>
+                    <p style="color: var(--text-muted); font-size: 14px; font-weight: 500; margin: 0;">Analisi in corso...</p>
                 </div>
             `;
 
@@ -320,7 +281,7 @@
                 
                 const data = await response.json();
                 if (data.errore) {
-                    divRisultato.innerHTML = '<div style="color: #ef4444; text-align:center; font-weight:600; padding: 20px;">Errore: ' + data.errore + '</div>';
+                    divRisultato.innerHTML = '<div style="color: var(--alert-red-text); font-weight: 500; padding: 16px;">Errore: ' + data.errore + '</div>';
                 } else {
                     const rawText = data.risultato;
                     
@@ -330,30 +291,30 @@
                     if (textUpper.includes('TRUFFA')) {
                         bannerHtml = `
                             <div class="verdetto-banner banner-truffa">
-                                <div class="verdetto-icon">🚨</div>
+                                <div class="verdetto-icon">⚠️</div>
                                 <div class="verdetto-content">
                                     <div class="verdetto-title">Attenzione: Truffa Rilevata</div>
-                                    <div class="verdetto-subtitle">Interrompi immediatamente ogni interazione. Non cliccare alcun link e non inserire credenziali o dati personali.</div>
+                                    <div class="verdetto-subtitle">Il contenuto presenta indicatori critici di frode. Interrompi immediatamente ogni interazione e non inserire dati personali.</div>
                                 </div>
                             </div>
                         `;
                     } else if (textUpper.includes('SOSPETTO')) {
                         bannerHtml = `
                             <div class="verdetto-banner banner-sospetto">
-                                <div class="verdetto-icon">⚠️</div>
+                                <div class="verdetto-icon">⚡</div>
                                 <div class="verdetto-content">
                                     <div class="verdetto-title">Avviso: Contenuto Sospetto</div>
-                                    <div class="verdetto-subtitle">Elevato indice di rischio. Procedi con cautela e verifica esclusivamente tramite i canali ufficiali.</div>
+                                    <div class="verdetto-subtitle">Rilevati elementi di rischio o urgenza artificiosa. Procedi con cautela e verifica tramite i canali ufficiali.</div>
                                 </div>
                             </div>
                         `;
                     } else if (textUpper.includes('SICURO')) {
                         bannerHtml = `
                             <div class="verdetto-banner banner-sicuro">
-                                <div class="verdetto-icon">✅</div>
+                                <div class="verdetto-icon">✓</div>
                                 <div class="verdetto-content">
                                     <div class="verdetto-title">Esito: Verosimilmente Sicuro</div>
-                                    <div class="verdetto-subtitle">Il contenuto non presenta indicatori noti di frode, ingegneria sociale o phishing.</div>
+                                    <div class="verdetto-subtitle">Il contenuto analizzato non mostra i pattern noti di ingegneria sociale o phishing.</div>
                                 </div>
                             </div>
                         `;
@@ -367,7 +328,7 @@
                     divRisultato.innerHTML = bannerHtml + '<div class="analisi-content">' + parsedHtml + '</div>';
                 }
             } catch (error) {
-                divRisultato.innerHTML = '<div style="color: #ef4444; text-align:center; font-weight:600;">Errore di connessione al server.</div>';
+                divRisultato.innerHTML = '<div style="color: var(--alert-red-text); font-weight: 500;">Errore di connessione al server.</div>';
             }
         }
     </script>
