@@ -3,168 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Non Ci Casco Mai | Cyber Threat Intelligence & Antifrode</title>
+    <title>Non Ci Casco Mai | Cosmic Threat Intelligence</title>
     <meta name="description" content="Verifica gratis truffe SMS, finti pacchi Nexi, allerte Poste Info e phishing online con Non Ci Casco Mai.">
     
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --bg-obsidian: #07090e;
-            --surface-dark: #0f172a;
-            --surface-card: #131c31;
-            --cyber-cyan: #00f2fe;
-            --cyber-red: #ff0055;
-            --cyber-amber: #ffb703;
-            --cyber-green: #00f5d4;
+            --space-void: #030308;
+            --galactic-core: #0f0c1b;
+            --nebula-surface: rgba(20, 18, 38, 0.65);
+            --starlight-cyan: #38bdf8;
+            --nebula-purple: #c084fc;
+            --supernova-red: #f43f5e;
+            --solar-amber: #fbbf24;
+            --aurora-green: #34d399;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
-            --border-glow: rgba(0, 242, 254, 0.2);
+            --border-galaxy: rgba(192, 132, 252, 0.15);
         }
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg-obsidian);
+            background-color: var(--space-void);
             color: var(--text-main);
             margin: 0;
-            padding: 30px 16px;
+            padding: 40px 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
             background-image: 
-                radial-gradient(circle at 10% 20%, rgba(0, 242, 254, 0.03) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(255, 0, 85, 0.03) 0%, transparent 40%);
+                radial-gradient(circle at 20% 15%, rgba(192, 132, 252, 0.07) 0%, transparent 45%),
+                radial-gradient(circle at 80% 85%, rgba(56, 189, 248, 0.06) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(15, 12, 27, 1) 0%, #030308 100%);
+            background-attachment: fixed;
             -webkit-font-smoothing: antialiased;
         }
         
-        /* Navbar Cyber HUD */
+        /* Navbar Cosmic Glass */
         .navbar {
-            max-width: 720px; width: 100%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px);
-            padding: 12px 20px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08);
-            display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; box-sizing: border-box; margin-bottom: 24px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 740px; width: 100%; background: var(--nebula-surface); backdrop-filter: blur(16px);
+            padding: 12px 20px; border-radius: 18px; border: 1px solid var(--border-galaxy);
+            display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; box-sizing: border-box; margin-bottom: 28px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
         .navbar a {
-            text-decoration: none; color: var(--text-muted); font-size: 13px; font-weight: 700;
-            padding: 6px 12px; border-radius: 8px; transition: all 0.2s ease; letter-spacing: 0.3px;
+            text-decoration: none; color: var(--text-muted); font-size: 13.5px; font-weight: 600;
+            padding: 6px 14px; border-radius: 10px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .navbar a:hover { background: rgba(0, 242, 254, 0.1); color: var(--cyber-cyan); text-shadow: 0 0 8px rgba(0,242,254,0.5); }
+        .navbar a:hover { background: rgba(56, 189, 248, 0.1); color: var(--starlight-cyan); text-shadow: 0 0 10px rgba(56, 189, 248, 0.6); }
 
         .container {
-            max-width: 720px; width: 100%; background: var(--surface-dark); padding: 40px;
-            border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.06);
-            margin-top: 16px; box-sizing: border-box; position: relative; overflow: hidden;
-        }
-        .container::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--cyber-cyan), transparent);
+            max-width: 740px; width: 100%; background: var(--nebula-surface); backdrop-filter: blur(20px);
+            padding: 44px; border-radius: 28px; box-shadow: 0 25px 60px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08);
+            border: 1px solid var(--border-galaxy); margin-top: 16px; box-sizing: border-box; position: relative; overflow: hidden;
         }
         
-        h1 { font-size: 30px; font-weight: 800; color: var(--text-main); margin-bottom: 8px; text-align: center; letter-spacing: -0.5px; }
-        h2 { font-size: 20px; font-weight: 700; color: var(--text-main); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-top: 0; }
-        h3.category-title { font-size: 12px; color: var(--cyber-cyan); margin: 28px 0 12px 0; text-transform: uppercase; letter-spacing: 1.5px; font-family: 'JetBrains Mono', monospace; font-weight: 700; }
-        p.subtitle { text-align: center; color: var(--text-muted); font-size: 15px; margin-bottom: 30px; line-height: 1.6; }
+        /* Cosmic Starlight Border Line */
+        .container::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--starlight-cyan), var(--nebula-purple), transparent);
+        }
+        
+        h1 { font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; text-align: center; letter-spacing: -0.5px; text-shadow: 0 2px 20px rgba(192, 132, 252, 0.2); }
+        h2 { font-family: 'Space Grotesk', sans-serif; font-size: 21px; font-weight: 700; color: var(--text-main); border-bottom: 1px solid var(--border-galaxy); padding-bottom: 14px; margin-top: 0; }
+        h3.category-title { font-size: 12px; color: var(--nebula-purple); margin: 30px 0 12px 0; text-transform: uppercase; letter-spacing: 2px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; }
+        p.subtitle { text-align: center; color: var(--text-muted); font-size: 15.5px; margin-bottom: 32px; line-height: 1.6; }
         
         textarea {
-            width: 100%; height: 130px; padding: 16px; border: 1px solid rgba(255,255,255,0.1); background: var(--surface-card);
-            border-radius: 14px; font-size: 15px; font-family: inherit; color: var(--text-main); resize: vertical; box-sizing: border-box; margin-bottom: 16px;
-            transition: all 0.3s ease;
+            width: 100%; height: 135px; padding: 18px; border: 1px solid rgba(255,255,255,0.08); background: rgba(5, 5, 15, 0.5);
+            border-radius: 16px; font-size: 15px; font-family: inherit; color: var(--text-main); resize: vertical; box-sizing: border-box; margin-bottom: 18px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
         }
-        textarea:focus { outline: none; border-color: var(--cyber-cyan); box-shadow: 0 0 20px rgba(0, 242, 254, 0.15); background: #18223c; }
+        textarea:focus { outline: none; border-color: var(--starlight-cyan); box-shadow: 0 0 25px rgba(56, 189, 248, 0.25), inset 0 2px 4px rgba(0,0,0,0.4); background: rgba(10, 10, 25, 0.7); }
 
-        .file-upload { margin-bottom: 24px; font-size: 14px; color: var(--cyber-cyan); font-weight: 600; }
+        .file-upload { margin-bottom: 26px; font-size: 14px; color: var(--starlight-cyan); font-weight: 600; }
         input[type="file"] { display: block; margin-top: 8px; font-size: 13px; color: var(--text-muted); }
         
         button {
-            width: 100%; background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); color: #07090e; border: none;
-            padding: 16px; font-size: 16px; border-radius: 14px; cursor: pointer; font-weight: 800;
-            transition: all 0.2s ease; box-shadow: 0 8px 25px rgba(0, 242, 254, 0.25); letter-spacing: 0.5px;
+            width: 100%; background: linear-gradient(135deg, #38bdf8 0%, #c084fc 100%); color: #030308; border: none;
+            padding: 16px; font-size: 16px; border-radius: 16px; cursor: pointer; font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 30px rgba(56, 189, 248, 0.3); letter-spacing: 0.5px;
         }
-        button:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(0, 242, 254, 0.4); filter: brightness(1.1); }
+        button:hover { transform: translateY(-2px); box-shadow: 0 15px 40px rgba(192, 132, 252, 0.4); filter: brightness(1.08); }
         button:active { transform: translateY(1px); }
         
-        /* Cyber Radar Scanner */
-        .scanner-hud { text-align: center; padding: 40px 0; }
-        .cyber-radar {
-            width: 60px; height: 60px; border: 3px solid rgba(0, 242, 254, 0.2); border-top: 3px solid var(--cyber-cyan);
-            border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px auto;
-            box-shadow: 0 0 15px rgba(0,242,254,0.3);
+        /* Nebula Singularity Spinner */
+        .scanner-hud { text-align: center; padding: 45px 0; }
+        .cosmic-singularity {
+            width: 64px; height: 64px; border: 3px solid rgba(192, 132, 252, 0.15); 
+            border-top: 3px solid var(--starlight-cyan); border-right: 3px solid var(--nebula-purple);
+            border-radius: 50%; animation: spinOrbit 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite; margin: 0 auto 20px auto;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spinOrbit { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* RISULTATI */
-        #risultato { margin-top: 32px; display: none; font-size: 15px; line-height: 1.7; color: #cbd5e1; }
+        #risultato { margin-top: 35px; display: none; font-size: 15.5px; line-height: 1.7; color: #cbd5e1; }
 
-        /* VERDETTO HUD BANNERS */
+        /* VERDETTO COSMIC BANNERS */
         .verdetto-banner {
-            display: flex; align-items: center; gap: 20px; padding: 24px; border-radius: 16px;
-            margin-bottom: 28px; color: white; box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-            position: relative; overflow: hidden;
+            display: flex; align-items: center; gap: 20px; padding: 26px; border-radius: 20px;
+            margin-bottom: 30px; color: white; box-shadow: 0 20px 45px rgba(0,0,0,0.6);
+            position: relative; overflow: hidden; backdrop-filter: blur(10px);
         }
-        .verdetto-icon { font-size: 3rem; flex-shrink: 0; line-height: 1; }
+        .verdetto-icon { font-size: 3.2rem; flex-shrink: 0; line-height: 1; filter: drop-shadow(0 0 10px rgba(255,255,255,0.4)); }
         .verdetto-content { display: flex; flex-direction: column; }
-        .verdetto-title { font-size: 1.3rem; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
-        .verdetto-subtitle { font-size: 0.95rem; opacity: 0.9; margin-top: 6px; font-weight: 500; }
+        .verdetto-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+        .verdetto-subtitle { font-size: 0.95rem; opacity: 0.95; margin-top: 6px; font-weight: 400; }
 
-        /* Banner Truffa - Cyber Red Alert */
+        /* Banner Truffa - Supernova Red */
         .banner-truffa {
-            background: linear-gradient(135deg, #ff0055 0%, #900028 100%);
-            border: 1px solid rgba(255, 0, 85, 0.5);
-            animation: pulse-alert 2s infinite;
+            background: linear-gradient(135deg, rgba(244, 63, 94, 0.9) 0%, rgba(136, 19, 55, 0.95) 100%);
+            border: 1px solid rgba(244, 63, 94, 0.4);
+            animation: supernovaPulse 2.5s infinite;
         }
-        @keyframes pulse-alert {
-            0% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0.6); }
-            70% { box-shadow: 0 0 0 20px rgba(255, 0, 85, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0); }
+        @keyframes supernovaPulse {
+            0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.5), 0 20px 45px rgba(0,0,0,0.6); }
+            70% { box-shadow: 0 0 0 25px rgba(244, 63, 94, 0), 0 20px 45px rgba(0,0,0,0.6); }
+            100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0), 0 20px 45px rgba(0,0,0,0.6); }
         }
 
-        /* Banner Sospetto - Cyber Amber */
+        /* Banner Sospetto - Solar Amber */
         .banner-sospetto {
-            background: linear-gradient(135deg, #ffb703 0%, #b37d00 100%);
-            border: 1px solid rgba(255, 183, 3, 0.5);
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.85) 0%, rgba(180, 83, 9, 0.95) 100%);
+            border: 1px solid rgba(251, 191, 36, 0.4);
         }
 
-        /* Banner Sicuro - Cyber Green */
+        /* Banner Sicuro - Aurora Green */
         .banner-sicuro {
-            background: linear-gradient(135deg, #00f5d4 0%, #007b69 100%);
-            color: #07090e;
-            border: 1px solid rgba(0, 245, 212, 0.5);
+            background: linear-gradient(135deg, rgba(52, 211, 153, 0.85) 0%, rgba(6, 95, 70, 0.95) 100%);
+            color: #030308;
+            border: 1px solid rgba(52, 211, 153, 0.4);
         }
-        .banner-sicuro .verdetto-subtitle { opacity: 0.9; color: #07090e; font-weight: 700; }
+        .banner-sicuro .verdetto-subtitle { opacity: 0.9; color: #030308; font-weight: 600; }
 
         /* ANALISI DETTAGLIATA */
         .analisi-content {
-            background: var(--surface-card); padding: 24px; border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(10, 10, 22, 0.6); padding: 28px; border-radius: 20px;
+            border: 1px solid var(--border-galaxy); box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
         }
-        .analisi-content h3, .analisi-content p strong { color: var(--text-main); font-weight: 700; font-size: 16px; margin-top: 22px; }
+        .analisi-content h3, .analisi-content p strong { color: var(--text-main); font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16.5px; margin-top: 24px; }
         .analisi-content p:first-child { margin-top: 0; }
         
         /* ALERT CARDS TRUFFE DEL MOMENTO */
         .alert-card {
-            background: rgba(255, 0, 85, 0.05);
-            border-left: 4px solid var(--cyber-red);
-            padding: 16px 18px; margin-bottom: 14px; border-radius: 0 12px 12px 0;
-            border-top: 1px solid rgba(255, 0, 85, 0.1); border-right: 1px solid rgba(255, 0, 85, 0.1); border-bottom: 1px solid rgba(255, 0, 85, 0.1);
+            background: rgba(244, 63, 94, 0.04);
+            border-left: 4px solid var(--supernova-red);
+            padding: 18px 20px; margin-bottom: 16px; border-radius: 0 16px 16px 0;
+            border-top: 1px solid rgba(244, 63, 94, 0.1); border-right: 1px solid rgba(244, 63, 94, 0.1); border-bottom: 1px solid rgba(244, 63, 94, 0.1);
+            transition: transform 0.2s ease;
         }
-        .alert-card h4 { margin: 0 0 6px 0; color: #ff3366; font-size: 15px; font-weight: 800; }
+        .alert-card:hover { transform: translateX(4px); }
+        .alert-card h4 { margin: 0 0 6px 0; color: #fb7185; font-size: 15.5px; font-weight: 700; font-family: 'Space Grotesk', sans-serif; }
         .alert-card p { margin: 0; color: var(--text-muted); font-size: 14px; line-height: 1.5; }
         
-        .category-grid { display: flex; gap: 8px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
-        .cat-item { background: rgba(0, 242, 254, 0.08); color: var(--cyber-cyan); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1px solid rgba(0, 242, 254, 0.2); font-family: 'JetBrains Mono', monospace; }
+        .category-grid { display: flex; gap: 8px; margin-bottom: 22px; justify-content: center; flex-wrap: wrap; }
+        .cat-item { background: rgba(192, 132, 252, 0.08); color: var(--nebula-purple); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid rgba(192, 132, 252, 0.2); font-family: 'Space Grotesk', sans-serif; letter-spacing: 0.5px; }
         
         .info-box {
-            background: var(--surface-card); border: 1px solid rgba(255,255,255,0.06);
-            padding: 24px; border-radius: 16px; font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-top: 20px;
+            background: rgba(10, 10, 22, 0.5); border: 1px solid var(--border-galaxy);
+            padding: 26px; border-radius: 20px; font-size: 14.5px; color: var(--text-muted); line-height: 1.6; margin-top: 22px;
         }
-        .info-box h3 { font-size: 16px; color: var(--text-main); margin-top: 0; margin-bottom: 8px; font-weight: 700; }
+        .info-box h3 { font-family: 'Space Grotesk', sans-serif; font-size: 17px; color: var(--text-main); margin-top: 0; margin-bottom: 10px; font-weight: 700; }
         
         .seo-section {
-            margin-top: 30px; font-size: 13px; color: var(--text-muted); text-align: center; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 20px;
+            margin-top: 35px; font-size: 13px; color: var(--text-muted); text-align: center; border-top: 1px solid var(--border-galaxy); padding-top: 24px;
         }
     </style>
 </head>
@@ -183,7 +192,7 @@
     <!-- STRUMENTO DI VERIFICA -->
     <div class="container" id="verifica">
         <h1>🛡️ Non Ci Casco Mai</h1>
-        <p class="subtitle">Cyber Threat Intelligence: Incolla un messaggio o carica uno screenshot per analizzare qualsiasi frode con IA avanzata.</p>
+        <p class="subtitle">Cosmic Threat Intelligence: Analizza istantaneamente messaggi, link e screenshot con una rete neurale avanzata.</p>
         
         <textarea id="testoMessaggio" placeholder="Incolla il testo del messaggio, l'annuncio o la chat sospetta..."></textarea>
         
@@ -192,9 +201,9 @@
             <input type="file" id="imageInput" accept="image/*">
         </div>
 
-        <button onclick="analizzaMessaggio()">AVVIA SCANSIONE ANTIFRODE</button>
+        <button onclick="analizzaMessaggio()">AVVIA SCANSIONE GALATTICA</button>
         
-        <p style="font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 14px; font-family: 'JetBrains Mono', monospace;">🔒 CRITTOGRAFIA ATTIVA • NESSUN DATO SALVATO SUI SERVER</p>
+        <p style="font-size: 11.5px; color: var(--text-muted); text-align: center; margin-top: 16px; font-family: 'Space Grotesk', sans-serif; letter-spacing: 0.5px;">✨ CRITTOGRAFIA QUANTISTICA • ZERO TRACCE MEMORIZZATE</p>
 
         <div id="risultato"></div>
     </div>
@@ -202,7 +211,7 @@
     <!-- BACHECA DELLE TRUFFE DEL MOMENTO -->
     <div class="container" id="truffe">
         <h2>🚨 Truffe del Momento in Italia</h2>
-        <p class="subtitle">Le allerte prioritarie rilevate dai nostri sistemi di monitoraggio.</p>
+        <p class="subtitle">Le allerte prioritarie rilevate dai nostri radar di sicurezza.</p>
 
         <div class="category-grid">
             <div class="cat-item">📱 PHISHING & SMS</div>
@@ -210,7 +219,7 @@
             <div class="cat-item">💰 INVESTIMENTI</div>
         </div>
 
-        <h3 class="category-title">01 // PHISHING & MESSAGGI INGANNEVOLI</h3>
+        <h3 class="category-title">SETTORE 01 // PHISHING & MESSAGGI INGANNEVOLI</h3>
 
         <div class="alert-card">
             <h4>📦 La Truffa del Finto Pacco Nexi</h4>
@@ -232,7 +241,7 @@
             <p>Finti allarmi sulla sicurezza del conto che invitano a cliccare su link contraffatti per inserire le credenziali di accesso.</p>
         </div>
 
-        <h3 class="category-title">02 // FINTI ANNUNCI & MARKETPLACE</h3>
+        <h3 class="category-title">SETTORE 02 // FINTI ANNUNCI & MARKETPLACE</h3>
 
         <div class="alert-card">
             <h4>🏷️ Il Finto Venditore su Marketplace / Social</h4>
@@ -253,20 +262,20 @@
             <h3>📬 Canale & Bollettini su Telegram</h3>
             <p>Unisciti al canale ufficiale o avvia il bot per ricevere le allerte di sicurezza e i bollettini periodici direttamente sullo smartphone.</p>
             
-            <div style="margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
-                <a href="https://t.me/noncicascomai" target="_blank" style="flex: 1; min-width: 180px; text-align: center; text-decoration: none; background: #0088cc; color: white; padding: 12px; font-size: 13px; border-radius: 10px; font-weight: 700;">
+            <div style="margin-top: 18px; display: flex; gap: 12px; flex-wrap: wrap;">
+                <a href="https://t.me/noncicascomai" target="_blank" style="flex: 1; min-width: 180px; text-align: center; text-decoration: none; background: rgba(56, 189, 248, 0.15); color: var(--starlight-cyan); border: 1px solid rgba(56, 189, 248, 0.3); padding: 13px; font-size: 13.5px; border-radius: 12px; font-weight: 700; transition: all 0.2s ease;">
                     📢 Unisciti al Canale
                 </a>
-                <a href="https://t.me/antiscam_italia_bot" target="_blank" style="flex: 1; min-width: 180px; text-align: center; text-decoration: none; background: #00c853; color: white; padding: 12px; font-size: 13px; border-radius: 10px; font-weight: 700;">
+                <a href="https://t.me/antiscam_italia_bot" target="_blank" style="flex: 1; min-width: 180px; text-align: center; text-decoration: none; background: rgba(52, 211, 153, 0.15); color: var(--aurora-green); border: 1px solid rgba(52, 211, 153, 0.3); padding: 13px; font-size: 13.5px; border-radius: 12px; font-weight: 700; transition: all 0.2s ease;">
                     🤖 Avvia il Bot Antifrode
                 </a>
             </div>
-            <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px; text-align: center;">🔒 Zero spam, solo notifiche di sicurezza certificate.</p>
+            <p style="font-size: 11.5px; color: var(--text-muted); margin-top: 12px; text-align: center;">🔒 Zero spam, solo notifiche di sicurezza certificate.</p>
         </div>
 
-        <div class="info-box" id="contatti" style="margin-top: 20px;">
+        <div class="info-box" id="contatti" style="margin-top: 22px;">
             <h3>✉️ Contatti & Segnalazioni</h3>
-            <p>Hai riscontrato una nuova truffa o vuoi inviarci una segnalazione? Puoi contattarci direttamente via email all'indirizzo: <br><a href="mailto:noncicascomai@gmail.com" style="color: var(--cyber-cyan); text-decoration: none; font-weight: 700;"><strong>noncicascomai@gmail.com</strong></a></p>
+            <p>Hai riscontrato una nuova truffa o vuoi inviarci una segnalazione? Puoi contattarci direttamente via email all'indirizzo: <br><a href="mailto:noncicascomai@gmail.com" style="color: var(--starlight-cyan); text-decoration: none; font-weight: 700;"><strong>noncicascomai@gmail.com</strong></a></p>
         </div>
     </div>
 
@@ -289,9 +298,9 @@
             divRisultato.style.display = 'block';
             divRisultato.innerHTML = `
                 <div class="scanner-hud">
-                    <div class="cyber-radar"></div>
-                    <p style="color: var(--cyber-cyan); font-size: 15px; font-weight: 700; margin: 0; font-family: 'JetBrains Mono', monospace;">SCANSIONE NEURAL NETWORK IN CORSO...</p>
-                    <p style="color: var(--text-muted); font-size: 13px; margin-top: 6px;">Analisi euristica di pattern, link e urgenza psicologica.</p>
+                    <div class="cosmic-singularity"></div>
+                    <p style="color: var(--starlight-cyan); font-size: 15px; font-weight: 700; margin: 0; font-family: 'Space Grotesk', sans-serif; letter-spacing: 1px;">ANALISI SPETTRALE IN CORSO...</p>
+                    <p style="color: var(--text-muted); font-size: 13px; margin-top: 6px;">Esame di pattern linguistici, vettori di attacco e ingegneria sociale.</p>
                 </div>
             `;
 
@@ -320,7 +329,7 @@
                 
                 const data = await response.json();
                 if (data.errore) {
-                    divRisultato.innerHTML = '<div style="color: var(--cyber-red); text-align:center; font-weight:700; padding: 20px;">Errore: ' + data.errore + '</div>';
+                    divRisultato.innerHTML = '<div style="color: var(--supernova-red); text-align:center; font-weight:700; padding: 20px;">Errore: ' + data.errore + '</div>';
                 } else {
                     const rawText = data.risultato;
                     
@@ -332,8 +341,8 @@
                             <div class="verdetto-banner banner-truffa">
                                 <div class="verdetto-icon">🚨</div>
                                 <div class="verdetto-content">
-                                    <div class="verdetto-title">CRITICAL ALERT // TRUFFA RILEVATA</div>
-                                    <div class="verdetto-subtitle">Interrompi immediatamente ogni interazione. Non cliccare link e non inserire credenziali.</div>
+                                    <div class="verdetto-title">SUPERNOVA ALERT // TRUFFA RILEVATA</div>
+                                    <div class="verdetto-subtitle">Pericolo critico rilevato. Interrompi immediatamente ogni comunicazione e non inserire credenziali.</div>
                                 </div>
                             </div>
                         `;
@@ -342,18 +351,18 @@
                             <div class="verdetto-banner banner-sospetto">
                                 <div class="verdetto-icon">⚠️</div>
                                 <div class="verdetto-content">
-                                    <div class="verdetto-title">WARNING // CONTENUTO SOSPETTO</div>
-                                    <div class="verdetto-subtitle">Elevato indice di rischio. Procedi con cautela e verifica tramite i canali ufficiali.</div>
+                                    <div class="verdetto-title">STELLAR WARNING // CONTENUTO SOSPETTO</div>
+                                    <div class="verdetto-subtitle">Anomalia rilevata. Procedi con cautela e verifica esclusivamente tramite canali ufficiali.</div>
                                 </div>
                             </div>
                         `;
                     } else if (textUpper.includes('SICURO')) {
                         bannerHtml = `
                             <div class="verdetto-banner banner-sicuro">
-                                <div class="verdetto-icon">✅</div>
+                                <div class="verdetto-icon">✨</div>
                                 <div class="verdetto-content">
-                                    <div class="verdetto-title">STATUS // VEROSIBILMENTE SICURO</div>
-                                    <div class="verdetto-subtitle">Nessun indicatore noto di frode, phishing o ingegneria sociale rilevato.</div>
+                                    <div class="verdetto-title">STABLE ORBIT // VEROSIBILMENTE SICURO</div>
+                                    <div class="verdetto-subtitle">Nessuna traccia di firme fraudolente o pattern di phishing nello spazio analizzato.</div>
                                 </div>
                             </div>
                         `;
@@ -367,7 +376,7 @@
                     divRisultato.innerHTML = bannerHtml + '<div class="analisi-content">' + parsedHtml + '</div>';
                 }
             } catch (error) {
-                divRisultato.innerHTML = '<div style="color: var(--cyber-red); text-align:center; font-weight:700;">Errore di connessione al server.</div>';
+                divRisultato.innerHTML = '<div style="color: var(--supernova-red); text-align:center; font-weight:700;">Errore di connessione al server galattico.</div>';
             }
         }
     </script>
