@@ -20,7 +20,6 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
-# Username ufficiale estratto dal tuo screenshot
 BOT_USERNAME = "antiscam_italia_bot"
 TELEGRAM_CHANNEL_ID = os.environ.get("TELEGRAM_CHANNEL_ID", "").strip()
 NEWSLETTER_SECRET = os.environ.get("NEWSLETTER_SECRET", "").strip()
@@ -32,8 +31,9 @@ WHATSAPP_PHONE_NUMBER_ID = os.environ.get("WHATSAPP_PHONE_NUMBER_ID", "").strip(
 MAX_TEXT_LENGTH = 5000
 MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024
 
-# Database in memoria per il Family Guard (Mappa: chat_id_genitore -> chat_id_figlio)
-famiglie_db = {}
+# Database in memoria per il Family Guard
+famiglie_db = {}       # Telegram: chat_id_genitore -> chat_id_figlio
+famiglie_wa_db = {}    # WhatsApp: phone_genitore -> phone_figlio
 
 RSS_SOURCES = [
     "https://www.cybersecurity360.it/feed/",
@@ -176,47 +176,43 @@ async def process_telegram_background(chat_id, msg):
         if "text" in msg:
             text_content = msg["text"]
             
-            # 1. GENERAZIONE DEL LINK MAGICO (FAMILY GUARD)
+            # 1. GENERAZIONE LINK MAGICO TELEGRAM
             if text_content.startswith("/proteggi"):
                 link_magico = f"https://t.me/{BOT_USERNAME}?start=figlio_{chat_id}"
                 risposta = (
-                    "🛡️ *Family Guard Attivo*\n\n"
+                    "🛡️ *Family Guard Attivo (Telegram)*\n\n"
                     "Ecco il tuo *Link Magico* personale:\n"
-                    f"`{link_magico}`\n\n"
+                    f"{link_magico}\n\n"
                     "👉 *Inoltra questo link a tuo padre o a tua madre.* "
-                    "Appena ci cliccheranno, saranno protetti in automatico e ogni loro segnalazione arriverà anche a te!"
+                    "Appena ci cliccheranno, si collegheranno in un tap alla tua linea protetta!"
                 )
                 send_telegram_message(chat_id, risposta)
                 return
 
-            # 2. AGGANCIO AUTOMATICO DEL GENITORE TRAMITE LINK MAGICO
+            # 2. AGGANCIO TRAMITE LINK MAGICO
             elif text_content.startswith("/start figlio_"):
                 try:
                     figlio_id = text_content.split("_")[1]
-                    famiglie_db[chat_id] = figlio_id  # Registrazione automatica della coppia
+                    famiglie_db[chat_id] = figlio_id
                     
                     msg_genitore = (
                         "✅ *Protezione Familiare Attivata con Successo!*\n\n"
-                        "Da questo momento in poi, se ricevi messaggi strani, SMS sospetti o hai dubbi, "
-                        "ti basta inoltrarli qui. Il sistema controllerà tutto e avviserà la tua famiglia per tenerti al sicuro."
+                        "Da questo momento in poi, se ricevi messaggi strani o SMS sospetti, ti basta inoltrarli qui."
                     )
                     send_telegram_message(chat_id, msg_genitore)
                     
-                    msg_figlio = "🎉 *Ottime notizie!* Un tuo familiare ha appena cliccato sul link e si è collegato alla tua linea protetta. Ora sei il suo guardiano digitale!"
+                    msg_figlio = "🎉 *Ottime notizie!* Un tuo familiare si è collegato alla tua linea protetta su Telegram."
                     send_telegram_message(int(figlio_id), msg_figlio)
                     return
                 except Exception as e:
-                    print(f"Errore nell'associazione familiare: {e}")
+                    print(f"Errore associazione Telegram: {e}")
 
-            # 3. GESTIONE DEI MESSAGGI DA LINEA PROTETTA (GENITORE -> FIGLIO)
+            # 3. GESTIONE LINEA PROTETTA TELEGRAM
             if chat_id in famiglie_db:
                 figlio_id = famiglie_db[chat_id]
                 res = perform_core_analysis(text_content=text_content)
-                
-                # Invia l'analisi al genitore
                 send_telegram_message(chat_id, res)
                 
-                # Inoltra l'allarme d'emergenza in tempo reale al figlio
                 avviso_figlio = (
                     "🚨 *ALLARME FAMILY GUARD* 🚨\n\n"
                     f"Il genitore protetto ha inviato questo contenuto:\n> \"{text_content}\"\n\n"
@@ -225,7 +221,7 @@ async def process_telegram_background(chat_id, msg):
                 send_telegram_message(int(figlio_id), avviso_figlio)
                 return
 
-            # 4. FLUSSO STANDARD PER UTENTI INDIVIDUALI
+            # 4. FLUSSO STANDARD
             res = perform_core_analysis(text_content=text_content)
             send_telegram_message(chat_id, res)
             
@@ -238,12 +234,11 @@ async def process_telegram_background(chat_id, msg):
             urllib.request.urlretrieve(down_path, temp_path)
             res = perform_core_analysis(file_path=temp_path)
             
-            # Se la foto arriva da una linea protetta, avvisa anche il figlio
             if chat_id in famiglie_db:
-                figlio_id = famiglie_db[chat_id]
+                figlio_id = familles = famiglie_db[chat_id]
                 avviso_figlio = (
                     "🚨 *ALLARME FAMILY GUARD (SCREENSHOT)* 🚨\n\n"
-                    "Il genitore protetto ha inviato uno screenshot da analizzare.\n\n"
+                    "Il genitore protetto ha inviato uno screenshot.\n\n"
                     f"*Esito Analisi IA:*\n{res}"
                 )
                 send_telegram_message(int(figlio_id), avviso_figlio)
@@ -256,10 +251,59 @@ async def process_whatsapp_background(from_phone, msg):
     try:
         msg_type = msg.get("type")
         if msg_type == "text":
-            text_body = msg.get("text", {}).get("body", "")
+            text_body = msg.get("text", {}).get("body", "").strip()
             if text_body:
+                
+                # 1. ATTIVAZIONE FAMILY GUARD WHATSAPP (IL FIGLIO DIGITA "proteggi")
+                if text_body.lower() == "proteggi":
+                    istruzione = f"collega_{from_phone}"
+                    risposta_wa = (
+                        "🛡️ *Family Guard Attivo (WhatsApp)*\n\n"
+                        "Per collegare un tuo familiare a questo numero protetto, fagli inviare esattamente questo messaggio:\n"
+                        f"`{istruzione}`"
+                    )
+                    send_whatsapp_message(from_phone, risposta_wa)
+                    return
+
+                # 2. AGGANCIO DEL GENITORE TRAMITE CODICE (IL GENITORE INVIA "collega_NUMEROFIGLIO")
+                elif text_body.startswith("collega_"):
+                    try:
+                        figlio_phone = text_body.split("_")[1].strip()
+                        famiglie_wa_db[from_phone] = figlio_phone
+                        
+                        msg_genitore = (
+                            "✅ *Protezione Familiare WhatsApp Attivata!*\n\n"
+                            "Da questo momento in poi, se ricevi messaggi o link sospetti, inoltrali qui e la tua famiglia verrà avvisata."
+                        )
+                        send_whatsapp_message(from_phone, msg_genitore)
+                        
+                        msg_figlio = "🎉 *Ottime notizie!* Un tuo familiare ha attivato la protezione collegandosi al tuo WhatsApp."
+                        send_whatsapp_message(figlio_phone, msg_figlio)
+                        return
+                    except Exception as e:
+                        print(f"Errore associazione WhatsApp: {e}")
+
+                # 3. GESTIONE MESSAGGI DA LINEA PROTETTA WHATSAPP (GENITORE -> FIGLIO)
+                if from_phone in famiglie_wa_db:
+                    figlio_phone = famiglie_wa_db[from_phone]
+                    analysis_res = perform_core_analysis(text_content=text_body)
+                    
+                    # Rispondi al genitore
+                    send_whatsapp_message(from_phone, analysis_res)
+                    
+                    # Allerta il figlio
+                    avviso_figlio = (
+                        "🚨 *ALLARME FAMILY GUARD (WHATSAPP)* 🚨\n\n"
+                        f"Il genitore protetto ha inviato questo contenuto:\n> \"{text_body}\"\n\n"
+                        f"*Esito Analisi IA:*\n{analysis_res}"
+                    )
+                    send_whatsapp_message(figlio_phone, avviso_figlio)
+                    return
+
+                # 4. FLUSSO STANDARD WHATSAPP
                 analysis_res = perform_core_analysis(text_content=text_body)
                 send_whatsapp_message(from_phone, analysis_res)
+
         elif msg_type in ["image", "document"]:
             send_whatsapp_message(from_phone, "Ricevuto l'allegato! Analisi in corso...")
             media_data = msg.get(msg_type, {})
@@ -284,6 +328,17 @@ async def process_whatsapp_background(from_phone, msg):
                     f_out.write(dl_resp.read())
                 
                 analysis_res = perform_core_analysis(file_path=temp_path)
+                
+                # Se arriva da una linea protetta WhatsApp, avvisa anche il figlio
+                if from_phone in famiglie_wa_db:
+                    figlio_phone = famiglie_wa_db[from_phone]
+                    avviso_figlio = (
+                        "🚨 *ALLARME FAMILY GUARD (WHATSAPP - SCREENSHOT)* 🚨\n\n"
+                        "Il genitore protetto ha inviato uno screenshot.\n\n"
+                        f"*Esito Analisi IA:*\n{analysis_res}"
+                    )
+                    send_whatsapp_message(figlio_phone, avviso_figlio)
+                    
                 send_whatsapp_message(from_phone, analysis_res)
             else:
                 send_whatsapp_message(from_phone, "⚠️ Errore: Impossibile ottenere l'URL di download da Meta.")
