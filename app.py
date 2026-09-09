@@ -32,7 +32,9 @@ MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024
 
 RSS_SOURCES = [
     "https://www.cybersecurity360.it/feed/",
-    "https://www.redhotcyber.com/feed/"
+    "https://www.redhotcyber.com/feed/",
+    "https://www.commissariatodips.it/notizie/feed/",
+    "https://www.acn.gov.it/notizie/feed"
 ]
 
 SYSTEM_PROMPT = """
