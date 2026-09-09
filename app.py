@@ -20,7 +20,8 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
-BOT_USERNAME = os.environ.get("TELEGRAM_BOT_USERNAME", "NonCiCascoMaiBot").strip()
+# Username ufficiale estratto dal tuo screenshot
+BOT_USERNAME = "antiscam_italia_bot"
 TELEGRAM_CHANNEL_ID = os.environ.get("TELEGRAM_CHANNEL_ID", "").strip()
 NEWSLETTER_SECRET = os.environ.get("NEWSLETTER_SECRET", "").strip()
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
@@ -367,7 +368,7 @@ def check_rss_feeds(request: Request, token: str = ""):
                 REGOLE:
                 1. SCARTA COMPLETAMENTE la notizia se riguarda vulnerabilità software aziendali, patch di server, bug tecnici complessi o corporate governance non sfruttabili direttamente per truffe agli utenti comuni.
                 2. ACCETTA solo se riguarda phishing, truffe telefoniche, frodi bancarie, furti d'identità, e-commerce truffaldini o allerte di pubblica utilità (Polizia Postale/ACN).
-                Se la accetti, trasformala in un post per le Telegram strutturato così:
+                Se la accetti, trasformala in un post per il canale Telegram strutturato così:
                 - Titolo forte con emoji (es. 🚨 ATTENZIONE: ...)
                 - Il meccanismo della truffa (2-3 frasi semplici)
                 - Cosa fare / Consigli pratici di difesa
