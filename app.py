@@ -4,6 +4,7 @@ import urllib.request
 import urllib.parse
 import base64
 import time
+import xml.etree.ElementTree as ET
 from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse
 from PIL import Image
@@ -28,6 +29,11 @@ WHATSAPP_PHONE_NUMBER_ID = os.environ.get("WHATSAPP_PHONE_NUMBER_ID", "").strip(
 
 MAX_TEXT_LENGTH = 5000
 MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024
+
+RSS_SOURCES = [
+    "https://www.cybersecurity360.it/feed/",
+    "https://www.redhotcyber.com/feed/"
+]
 
 SYSTEM_PROMPT = """
 Sei 'Non Ci Casco Mai', un esperto di cybersecurity e analista antifrode.
@@ -259,6 +265,56 @@ def trigger_newsletter(request: Request, token: str = ""):
         return {"status": "success", "message": "Newsletter pubblicata sul canale con successo!"}
     else:
         return JSONResponse({"status": "error", "message": "Impossibile inviare il messaggio al canale Telegram. Verifica che il bot sia amministratore del canale."}, status_code=500)
+
+@app.get("/check-rss")
+@limiter.limit("5/minute")
+def check_rss_feeds(request: Request, token: str = ""):
+    if NEWSLETTER_SECRET and token != NEWSLETTER_SECRET:
+        return JSONResponse({"error": "Unauthorized"}, status_code=403)
+        
+    published_count = 0
+    for rss_url in RSS_SOURCES:
+        try:
+            req = urllib.request.Request(rss_url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=15) as response:
+                xml_data = response.read()
+                
+            root = ET.fromstring(xml_data)
+            items = root.findall('.//item')[:3]
+            
+            for item in items:
+                title = item.find('title').text if item.find('title') is not None else ""
+                description = item.find('description').text if item.find('description') is not None else ""
+                link = item.find('link').text if item.find('link') is not None else ""
+                
+                news_text = f"Titolo: {title}\nContenuto: {description}\nLink: {link}"
+                
+                filter_prompt = f"""
+                Sei un esperto di cybersecurity e contrasto alle truffe digitali per il canale Telegram "Non Ci Casco Mai".
+                Analizza questa notizia:
+                {news_text}
+
+                REGOLE:
+                1. SCARTA COMPLETAMENTE la notizia se riguarda vulnerabilità software aziendali, patch di server, bug tecnici complessi o corporate governance non sfruttabili direttamente per truffe agli utenti comuni.
+                2. ACCETTA solo se riguarda phishing, truffe telefoniche, frodi bancarie, furti d'identità, e-commerce truffaldini o allerte di pubblica utilità (Polizia Postale/ACN).
+                Se la accetti, trasformala in un post per il canale Telegram strutturato così:
+                - Titolo forte con emoji (es. 🚨 ATTENZIONE: ...)
+                - Il meccanismo della truffa (2-3 frasi semplici)
+                - Cosa fare / Consigli pratici di difesa
+                Se non è pertinente, rispondi unicamente con la parola: SCARTA.
+                """
+                
+                ai_response = call_gemini_api_native(filter_prompt)
+                
+                if ai_response and "SCARTA" not in ai_response and "⚠️" not in ai_response:
+                    success = send_telegram_channel_message(ai_response)
+                    if success:
+                        published_count += 1
+                    time.sleep(1)
+        except Exception as e:
+            print(f"Errore lettura RSS {rss_url}: {e}")
+            
+    return {"status": "success", "articoli_pubblicati": published_count}
 
 @app.post("/analizza")
 @limiter.limit("5/minute")
