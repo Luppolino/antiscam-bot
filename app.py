@@ -4,6 +4,7 @@ import urllib.request
 import urllib.parse
 import base64
 import time
+import uuid
 import xml.etree.ElementTree as ET
 from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -31,9 +32,10 @@ WHATSAPP_PHONE_NUMBER_ID = os.environ.get("WHATSAPP_PHONE_NUMBER_ID", "").strip(
 MAX_TEXT_LENGTH = 5000
 MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024
 
-# Database in memoria per il Family Guard
-famiglie_db = {}       # Telegram: chat_id_genitore -> chat_id_figlio
-famiglie_wa_db = {}    # WhatsApp: phone_genitore -> phone_figlio
+# Database in memoria
+famiglie_db = {}        # Telegram: chat_id_genitore -> chat_id_figlio
+famiglie_wa_db = {}     # WhatsApp: phone_genitore -> phone_figlio
+sentinella_tokens = {}  # Token app Android -> {"platform": telegram/whatsapp, "target": id}
 
 RSS_SOURCES = [
     "https://www.cybersecurity360.it/feed/",
@@ -176,6 +178,18 @@ async def process_telegram_background(chat_id, msg):
         if "text" in msg:
             text_content = msg["text"]
             
+            # 0. GENERAZIONE TOKEN SENTINELLA ANDROID (TELEGRAM)
+            if text_content.startswith("/sentinella"):
+                token = str(uuid.uuid4())[:8].upper()
+                sentinella_tokens[token] = {"platform": "telegram", "target": chat_id}
+                risposta = (
+                    "🛡️ *Attivazione Sentinella Android*\n\n"
+                    f"Il tuo Codice di Sicurezza (Token) personale è:\n`{token}`\n\n"
+                    "👉 Copia questo codice e incollalo nell'app Android *Non Ci Casco Mai Sentinella* per collegare il tuo telefono!"
+                )
+                send_telegram_message(chat_id, risposta)
+                return
+
             # 1. GENERAZIONE LINK MAGICO TELEGRAM
             if text_content.startswith("/proteggi"):
                 link_magico = f"https://t.me/{BOT_USERNAME}?start=figlio_{chat_id}"
@@ -235,7 +249,7 @@ async def process_telegram_background(chat_id, msg):
             res = perform_core_analysis(file_path=temp_path)
             
             if chat_id in famiglie_db:
-                figlio_id = familles = famiglie_db[chat_id]
+                figlio_id = famiglie_db[chat_id]
                 avviso_figlio = (
                     "🚨 *ALLARME FAMILY GUARD (SCREENSHOT)* 🚨\n\n"
                     "Il genitore protetto ha inviato uno screenshot.\n\n"
@@ -254,7 +268,19 @@ async def process_whatsapp_background(from_phone, msg):
             text_body = msg.get("text", {}).get("body", "").strip()
             if text_body:
                 
-                # 1. ATTIVAZIONE FAMILY GUARD WHATSAPP (IL FIGLIO DIGITA "proteggi")
+                # 0. ATTIVAZIONE SENTINELLA ANDROID (WHATSAPP)
+                if text_body.lower() in ["sentinella", "/sentinella"]:
+                    token = str(uuid.uuid4())[:8].upper()
+                    sentinella_tokens[token] = {"platform": "whatsapp", "target": from_phone}
+                    risposta_wa = (
+                        "🛡️ *Attivazione Sentinella Android (WhatsApp)*\n\n"
+                        f"Il tuo Codice di Sicurezza (Token) personale è:\n`{token}`\n\n"
+                        "👉 Copia questo codice e incollalo nell'app Android *Non Ci Casco Mai Sentinella* per collegare il tuo telefono!"
+                    )
+                    send_whatsapp_message(from_phone, risposta_wa)
+                    return
+
+                # 1. ATTIVAZIONE FAMILY GUARD WHATSAPP
                 if text_body.lower() == "proteggi":
                     istruzione = f"collega_{from_phone}"
                     risposta_wa = (
@@ -265,7 +291,7 @@ async def process_whatsapp_background(from_phone, msg):
                     send_whatsapp_message(from_phone, risposta_wa)
                     return
 
-                # 2. AGGANCIO DEL GENITORE TRAMITE CODICE (IL GENITORE INVIA "collega_NUMEROFIGLIO")
+                # 2. AGGANCIO DEL GENITORE TRAMITE CODICE
                 elif text_body.startswith("collega_"):
                     try:
                         figlio_phone = text_body.split("_")[1].strip()
@@ -273,7 +299,7 @@ async def process_whatsapp_background(from_phone, msg):
                         
                         msg_genitore = (
                             "✅ *Protezione Familiare WhatsApp Attivata!*\n\n"
-                            "Da questo momento in poi, se ricevi messaggi o link sospetti, inoltrali qui e la tua famiglia verrà avvisata."
+                            "Da questo momento in poi, se ricevi messaggi o link sospetti, inoltrarli qui e la tua famiglia verrà avvisata."
                         )
                         send_whatsapp_message(from_phone, msg_genitore)
                         
@@ -283,15 +309,13 @@ async def process_whatsapp_background(from_phone, msg):
                     except Exception as e:
                         print(f"Errore associazione WhatsApp: {e}")
 
-                # 3. GESTIONE MESSAGGI DA LINEA PROTETTA WHATSAPP (GENITORE -> FIGLIO)
+                # 3. GESTIONE MESSAGGI DA LINEA PROTETTA WHATSAPP
                 if from_phone in famiglie_wa_db:
                     figlio_phone = famiglie_wa_db[from_phone]
                     analysis_res = perform_core_analysis(text_content=text_body)
                     
-                    # Rispondi al genitore
                     send_whatsapp_message(from_phone, analysis_res)
                     
-                    # Allerta il figlio
                     avviso_figlio = (
                         "🚨 *ALLARME FAMILY GUARD (WHATSAPP)* 🚨\n\n"
                         f"Il genitore protetto ha inviato questo contenuto:\n> \"{text_body}\"\n\n"
@@ -329,7 +353,6 @@ async def process_whatsapp_background(from_phone, msg):
                 
                 analysis_res = perform_core_analysis(file_path=temp_path)
                 
-                # Se arriva da una linea protetta WhatsApp, avvisa anche il figlio
                 if from_phone in famiglie_wa_db:
                     figlio_phone = famiglie_wa_db[from_phone]
                     avviso_figlio = (
@@ -363,6 +386,37 @@ def privacy_page(request: Request):
             return f.read()
     except Exception as e:
         return f"<h1>Errore caricamento privacy policy: {e}</h1>"
+
+# --- ROTTA UNIFICATA PER RICEVERE LE NOTIFICHE DALLA SENTINELLA ANDROID ---
+@app.post("/api/sentinella")
+@limiter.limit("30/minute")
+async def api_sentinella(request: Request):
+    try:
+        data = await request.json()
+        token = data.get("token", "").strip()
+        notif_text = data.get("text", "").strip()
+        app_name = data.get("package", "Notifica Android")
+        
+        if not token or not notif_text:
+            return JSONResponse({"error": "Token o testo mancanti"}, status_code=400)
+            
+        target_info = sentinella_tokens.get(token)
+        
+        # Analisi IA della notifica intercettata
+        analysis = perform_core_analysis(text_content=f"Notifica intercettata da {app_name}: {notif_text}")
+        
+        if target_info:
+            platform = target_info.get("platform")
+            target = target_info.get("target")
+            
+            if platform == "telegram":
+                send_telegram_message(target, f"🚨 *ALLARME SENTINELLA ANDROID* 🚨\n\n{analysis}")
+            elif platform == "whatsapp":
+                send_whatsapp_message(target, f"🚨 *ALLARME SENTINELLA ANDROID (WHATSAPP)* 🚨\n\n{analysis}")
+            
+        return JSONResponse({"status": "success", "analisi": analysis})
+    except Exception as e:
+        return JSONResponse({"errore": str(e)}, status_code=500)
 
 @app.get("/trigger-newsletter")
 @limiter.limit("5/minute")
