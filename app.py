@@ -5,6 +5,7 @@ import urllib.parse
 import base64
 import time
 import uuid
+import random
 import xml.etree.ElementTree as ET
 from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -35,7 +36,7 @@ MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024
 # Database in memoria
 famiglie_db = {}        # Telegram: chat_id_genitore -> chat_id_figlio
 famiglie_wa_db = {}     # WhatsApp: phone_genitore -> phone_figlio
-sentinella_tokens = {}  # Token app Android -> {"platform": telegram/whatsapp, "target": id}
+sentinella_tokens = {}  # Token numerico app Android -> {"platform": telegram/whatsapp, "target": id}
 
 RSS_SOURCES = [
     "https://www.cybersecurity360.it/feed/",
@@ -178,14 +179,14 @@ async def process_telegram_background(chat_id, msg):
         if "text" in msg:
             text_content = msg["text"]
             
-            # 0. GENERAZIONE TOKEN SENTINELLA ANDROID (TELEGRAM)
+            # 0. GENERAZIONE TOKEN NUMERICO SENTINELLA ANDROID (TELEGRAM)
             if text_content.startswith("/sentinella"):
-                token = str(uuid.uuid4())[:8].upper()
+                token = "".join([str(random.randint(0, 9)) for _ in range(6)])
                 sentinella_tokens[token] = {"platform": "telegram", "target": chat_id}
                 risposta = (
                     "🛡️ *Attivazione Sentinella Android*\n\n"
-                    f"Il tuo Codice di Sicurezza (Token) personale è:\n`{token}`\n\n"
-                    "👉 Copia questo codice e incollalo nell'app Android *Non Ci Casco Mai Sentinella* per collegare il tuo telefono!"
+                    f"Il tuo Codice di Sicurezza numerico è:\n`{token}`\n\n"
+                    "👉 Inserisci questo codice numerico nell'app Android *Non Ci Casco Mai Sentinella*!"
                 )
                 send_telegram_message(chat_id, risposta)
                 return
@@ -268,14 +269,14 @@ async def process_whatsapp_background(from_phone, msg):
             text_body = msg.get("text", {}).get("body", "").strip()
             if text_body:
                 
-                # 0. ATTIVAZIONE SENTINELLA ANDROID (WHATSAPP)
+                # 0. ATTIVAZIONE TOKEN NUMERICO SENTINELLA ANDROID (WHATSAPP)
                 if text_body.lower() in ["sentinella", "/sentinella"]:
-                    token = str(uuid.uuid4())[:8].upper()
+                    token = "".join([str(random.randint(0, 9)) for _ in range(6)])
                     sentinella_tokens[token] = {"platform": "whatsapp", "target": from_phone}
                     risposta_wa = (
                         "🛡️ *Attivazione Sentinella Android (WhatsApp)*\n\n"
-                        f"Il tuo Codice di Sicurezza (Token) personale è:\n`{token}`\n\n"
-                        "👉 Copia questo codice e incollalo nell'app Android *Non Ci Casco Mai Sentinella* per collegare il tuo telefono!"
+                        f"Il tuo Codice di Sicurezza numerico è:\n`{token}`\n\n"
+                        "👉 Inserisci questo codice numerico nell'app Android *Non Ci Casco Mai Sentinella*!"
                     )
                     send_whatsapp_message(from_phone, risposta_wa)
                     return
