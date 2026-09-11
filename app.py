@@ -4,7 +4,6 @@ import urllib.request
 import urllib.parse
 import base64
 import time
-import uuid
 import random
 import xml.etree.ElementTree as ET
 from fastapi import FastAPI, Request, BackgroundTasks
@@ -137,12 +136,18 @@ def perform_core_analysis(text_content=None, file_path=None):
 
 def send_telegram_message(chat_id, text):
     if not BOT_TOKEN: return
+    tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     try:
-        tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        req = urllib.request.Request(tg_url, data=json.dumps({"chat_id": chat_id, "text": text, "parse_mode": "Markdown"}).encode('utf-8'), headers={'Content-Type': 'application/json'})
+        payload = {"chat_id": chat_id, "text": text, "parse_mode": "Markdown"}
+        req = urllib.request.Request(tg_url, data=json.dumps(payload).encode('utf-8'), headers={'Content-Type': 'application/json'})
         urllib.request.urlopen(req, timeout=10)
     except Exception as e:
-        print(f"Errore Telegram: {e}")
+        try:
+            payload_plain = {"chat_id": chat_id, "text": text}
+            req_plain = urllib.request.Request(tg_url, data=json.dumps(payload_plain).encode('utf-8'), headers={'Content-Type': 'application/json'})
+            urllib.request.urlopen(req_plain, timeout=10)
+        except Exception as ex:
+            print(f"Errore Telegram: {ex}")
 
 def send_telegram_channel_message(text):
     if not BOT_TOKEN or not TELEGRAM_CHANNEL_ID: return False
@@ -430,7 +435,7 @@ def trigger_newsletter(request: Request, token: str = ""):
     Scrivi una pillola di sicurezza / bollettino antifrode inedito e di grande valore per il nostro canale Telegram. 
     Scegli una delle truffe più diffuse del momento in Italia (es. smishing dei corrieri, finto operatore bancario, phishing con QR code o falsi investimenti).
     La struttura deve essere:
-    - Un titolo accattivante ed esplicativo con emoji (es. 🚨 ALLerta TRUFFA: ...)
+    - Un titolo accattivante ed esplicativo con emoji (es. 🚨 ALLERTA TRUFFA: ...)
     - Come agiscono i truffatori (il tranello)
     - I segnali d'allarme da cogliere al volo
     - La regola d'oro per difendersi
